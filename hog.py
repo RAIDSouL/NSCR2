@@ -2,6 +2,10 @@
 # import matplotlib.pyplot as plt
 # import cv2
 import imutils
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+from IPython.core.debugger import set_trace
 # count = 0
 # charlist = "ABCDF"
 # colorlist = ["red","green","blue","olive","cyan"]
@@ -66,14 +70,11 @@ import imutils
 import numpy as np
 import cv2
 
-count = 1
-x = 0
-y = 0
-
-hog = cv2.HOGDescriptor((50,50),(50,50),(50,50),(50,50),9)
+count = 0
+hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
 charlist = "TF"
-label_train = np.zeros((100,1))
-
+label_train = np.zeros((40,1))
+colorlist = ["red","green"]
 
 for char_id in range(0,2):
     for im_id in range(1,21):
@@ -82,24 +83,31 @@ for char_id in range(0,2):
         #read pictures
         im = cv2.imread(".//Check dataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
         im = im[0:im.shape[1],0:im.shape[1]]
-        im = cv2.resize(im, (50, 50))
-        im = cv2.GaussianBlur(im, (3, 3), 0)
+        im = cv2.resize(im, (80, 80))
         h = hog.compute(im)
         if count == 0:
             features_train = h.reshape(1,-1)
         else:
             features_train = np.concatenate((features_train,h.reshape(1,-1)),axis = 0)
+        label_train[count] = char_id
+        count = count+1
+        # plt.figure(char_id)
+        # plt.plot(h, color=colorlist[char_id])
+        # plt.ylim(0,1)
+        # plt.figure(3)
+        # plt.plot(h,color=colorlist[char_id])
+        # plt.ylim(0, 1)
 
-        
-        # im = imutils.resize(im, height=50)
-        # im = im[y:50,x:x+50]
-        # cv2.imwrite( ".//Check Dataset/" + str(char_id) + "//" + str(im_id) +".bmp" , im)
-        # cv2.imshow(str(count),im)
 
-        #SHow img training set
-        # cv2.moveWindow(str(count), 120*im_id, 100*char_id)
-        # count = count+1
+#KNN
+knn = cv2.ml.KNearest_create()
+# set_trace()
+label_train = label_train.astype(int)
+knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
+_,result,_,_ = knn.findNearest(features_train,3)
+print(result)
 
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
+# np.save("features_train" , features_train)
+# np.save("label_train" , label_train)
+# print(features_train)
+# print(label_train)
