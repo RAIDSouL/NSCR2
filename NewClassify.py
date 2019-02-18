@@ -11,10 +11,10 @@ from imutils.perspective import four_point_transform
 
 def main() :
     count = 1
-    for picture_id in range (4,7):
+    for picture_id in range (1,11):
         
         im = cv2.imread(".//Check Dataset//" + str(picture_id) + ".jpg" , 0)
-        im = imutils.resize(im, height=500)
+        im = imutils.resize(im, height=750)
         Rim = im.copy()
         im = cv2.medianBlur(im,9)
         im = cv2.adaptiveThreshold(im,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
@@ -25,9 +25,10 @@ def main() :
         kernel = np.ones((1,30),np.uint8)
         im = cv2.erode(im,kernel,iterations = 1)
         _,contours,_ = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-        for cny in contours[0:] :
+        for cny in contours[0:] : 
             x, y, w, h = cv2.boundingRect(cny)
-            cv2.rectangle(Rim , (x,y) , (x+w,y+h) , (0,0,255) , 2)
+            if(w * h > 1000 and w * h < 8000) :
+                cv2.rectangle(Rim , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         cv2.imshow(str(count) , Rim)
 
 
