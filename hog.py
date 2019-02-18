@@ -30,10 +30,10 @@ import imutils
 #         im = cv2.GaussianBlur(im, (3, 3), 0)
 #         h = hog.compute(im)
 
-#         if count == 0:
-#             features_train = h.reshape(1,-1)
-#         else:
-#             features_train = np.concatenate((features_train,h.reshape(1,-1)),axis = 0)
+        # if count == 0:
+        #     features_train = h.reshape(1,-1)
+        # else:
+        #     features_train = np.concatenate((features_train,h.reshape(1,-1)),axis = 0)
 
 #         #will get 9 features and 9 row datas
 
@@ -67,18 +67,33 @@ import numpy as np
 import cv2
 
 count = 1
-charlist = "ABCDF"
 x = 0
 y = 0
-for char_id in range(1,11):
-    for im_id in range(1,7):
+
+hog = cv2.HOGDescriptor((50,50),(50,50),(50,50),(50,50),9)
+charlist = "TF"
+label_train = np.zeros((100,1))
+
+
+for char_id in range(0,2):
+    for im_id in range(1,21):
         #5 pictures
 
         #read pictures
-        im = cv2.imread(".//Check dataset/"+ str(char_id) +"//"+str(im_id)+".png",0)
-        im = imutils.resize(im, height=50)
-        im = im[y:50,x:x+50]
-        cv2.imwrite( ".//Check Dataset/" + str(char_id) + "//" + str(im_id) +".bmp" , im)
+        im = cv2.imread(".//Check dataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
+        im = im[0:im.shape[1],0:im.shape[1]]
+        im = cv2.resize(im, (50, 50))
+        im = cv2.GaussianBlur(im, (3, 3), 0)
+        h = hog.compute(im)
+        if count == 0:
+            features_train = h.reshape(1,-1)
+        else:
+            features_train = np.concatenate((features_train,h.reshape(1,-1)),axis = 0)
+
+        
+        # im = imutils.resize(im, height=50)
+        # im = im[y:50,x:x+50]
+        # cv2.imwrite( ".//Check Dataset/" + str(char_id) + "//" + str(im_id) +".bmp" , im)
         # cv2.imshow(str(count),im)
 
         #SHow img training set
