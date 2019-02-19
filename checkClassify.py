@@ -50,39 +50,45 @@ def main(argv) :
             cv2.imwrite( str(w) + "+" + str(h) + ".png" , roi)
             txt = text_from_image_file( str(w) + "+" + str(h)  + ".png",'tha')
 
-            can_hog = 0
-            if iterative_levenshtein(strTime[0],txt) <= 2:
-                _isEatBreakfast = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[1],txt) <= 2:
-                _isEatLunch = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[2],txt) <= 2:
-                _isEatDinner = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[3],txt) <= 2:
-                _isEatBedTime = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[4],txt) <= 2:
-                isEatingBefore = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[5],txt) <= 2:
-                isEatingBefore = False
-                can_hog = 1
-            if iterative_levenshtein(strTime[6],txt) <= 2:
-                isEatingBefore = False
-                _isEatBreakfast = True
-                can_hog = 1
-            if iterative_levenshtein(strTime[7],txt) <= 2:
-                isEatingBefore = False
-                _isEatBreakfast = True
-                can_hog = 1
-            
-            
+            im = roi[0:im.shape[1],0:im.shape[1]]
+            im = cv2.resize(im, (80, 80))
+            h = hog.compute(im)
+            data_train = h.reshape(1,-1)
+            _,result,_,_ = knn.findNearest(data_train,3)
 
-            if( hog == 1) :
-                _,result,_,_ = knn.findNearest(features_train,3)
+            
+            if iterative_levenshtein(strTime[0],txt) <= 2:
+                if result == 0 :
+                    _isEatBreakfast = True
+            if iterative_levenshtein(strTime[1],txt) <= 2:
+                if result == 0 :
+                    _isEatLunch = True
                 
+            if iterative_levenshtein(strTime[2],txt) <= 2:
+                if result == 0 :
+                    _isEatDinner = True
+                
+            if iterative_levenshtein(strTime[3],txt) <= 2:
+                if result == 0 :
+                    _isEatBedTime = True
+                
+            if iterative_levenshtein(strTime[4],txt) <= 2:
+                if result == 0 :
+                    isEatingBefore = True
+                
+            if iterative_levenshtein(strTime[5],txt) <= 2:
+                if result == 0 :
+                    isEatingBefore = False
+                
+            if iterative_levenshtein(strTime[6],txt) <= 2:
+                if result == 0 :
+                    isEatingBefore = False
+                    _isEatBreakfast = True
+                
+            if iterative_levenshtein(strTime[7],txt) <= 2:
+                if result == 0 :isEatingBefore = False
+                    _isEatBreakfast = True
+
     # cv2.imshow("asdfghjk" , Rim)
     # cv2.waitKey(0)
 

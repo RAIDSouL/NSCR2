@@ -109,7 +109,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
     print(conv_json)
 
 def main(argv) :
-    image = cv2.imread(argv[0]) 
+    image = cv2.imread(argv[0] ,0) 
     image = imutils.resize(image, height=700)
     image = cv2.medianBlur(image,9)
     image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
