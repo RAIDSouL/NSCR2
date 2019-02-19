@@ -2,6 +2,7 @@ import cv2
 import sys
 import re
 import os
+import math
 import json
 import imutils
 import numpy as np
@@ -99,7 +100,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
     output = {}
     output["isPeriod"] = _isPeriod
     data = {}
-    data["isEatBefore"] = _isEatBefore
+    data["isEatingBefore"] = _isEatBefore
     data["isEatBreakfast"] = _isEatBreakfast
     data["isEatLunch"] = _isEatLunch
     data["isEatDinner"] = _isEatDinner
@@ -111,49 +112,57 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
 def main(argv) :
     image = cv2.imread(argv[0] ,0) 
     image = imutils.resize(image, height=700)
+    Rem = image.copy()
+    Rim = image.copy()
     image = cv2.medianBlur(image,9)
     image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-    blurred = cv2.GaussianBlur(image, (7 , 7), 0)
+    blurred = cv2.GaussianBlur(image, (5 , 5), 0)
     edged = cv2.Canny(blurred, 50, 200, 255)
-    kernel = np.ones((3,8),np.uint8)
+    kernel = np.ones((3,30),np.uint8)
     dilation = cv2.dilate(edged,kernel,iterations = 1)
+    cv2.imshow("da" , dilation)
+    # cv2.waitKey(0)
     contourmask,contours,hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
     fname = argv[0].split(".")[0]
     datalists = []
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
+        cv2.rectangle(Rim , (x,y) , (x+w,y+h) , (0,0,255) , 2)
         if (h / w < 0.7 and h * w > 500 ) :
-            roi = image[y:y+h, x:x+w]
+            roi = Rem[y:y+h, x:x+w]
+            # roi = imutils.resize(roi, height=300)
             cv2.imwrite( str(w*h) + ".png" , roi)
             datalists = datalists + text_from_image_file( str(w*h) + ".png",'tha')
             os.remove( str(w*h) + ".png")
 
-    # cv2.show("image",image)
+    cv2.imshow("image", Rim)
+    cv2.waitKey(0)
     isEatingBefore = False
     _isEatBreakfast = False
     _isEatLunch = False
     _isEatDinner = False
-    _isEatBedTime =False 
-    # print(datalists)
+    _isEatBedTime =False
+    print(datalists)
     for idx,data in enumerate(strTime) :
         for txt in datalists :
-            if iterative_levenshtein(data,txt) <= 2 and idx == 0 :
+            check = (iterative_levenshtein(data,txt) <= math.floor((len(data)-1)/2) or txt.find(data) >= 0)
+            if check and idx == 0 :
                 _isEatBreakfast = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 1 :
+            if check and idx == 1 :
                 _isEatLunch = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 2 :
+            if check and idx == 2 :
                 _isEatDinner = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 3 :
+            if check and idx == 3 :
                 _isEatBedTime = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 4 :
+            if check and idx == 4 :
                 isEatingBefore = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 5 :
+            if check and idx == 5 :
                 isEatingBefore = False
-            if iterative_levenshtein(data,txt) <= 2 and idx == 6 :
+            if check and idx == 6 :
                 isEatingBefore = False
                 _isEatBreakfast = True
-            if iterative_levenshtein(data,txt) <= 2 and idx == 7 :
+            if check and idx == 7 :
                 isEatingBefore = False
                 _isEatBreakfast = True
 

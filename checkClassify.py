@@ -110,6 +110,7 @@ def main(argv) :
     image = cv2.imread(argv[0] , 0) 
     image = imutils.resize(image, height=700)
     Rim = image.copy()
+    # Rem = image.copy()
     image = cv2.medianBlur(image,9)
     image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
     blurred = cv2.GaussianBlur(image, (7 , 7), 0)
@@ -139,10 +140,12 @@ def main(argv) :
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
         if(w * h > 1000 and w * h < 8000) :
-            # cv2.rectangle(Rim , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
+            # cv2.rectangle(Rem , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
             if(y>=18 and x>=10) :
                 roi = Rim[y-18:y+h+4, x-10:x+w+13]
-                cv2.imwrite( str(w*h) + ".png" , roi)
+                Rem = roi.copy()
+                # Rem = imutils.resize(Rem, height=100)
+                cv2.imwrite( str(w*h) + ".png" , Rem)
                 txts = text_from_image_file( str(w*h) + ".png" ,'tha')
 
                 im = roi[0:im.shape[1],0:im.shape[1]]
@@ -150,7 +153,7 @@ def main(argv) :
                 ho = hog.compute(im)
                 data_train = ho.reshape(1,-1)
                 _,result,_,_ = knn.findNearest(data_train,3)
-                # print(txts)
+                print(txts)
                 for txt in txts :
                     if iterative_levenshtein(strTime[0],txt) <= 2:
                         # print(result)
@@ -192,10 +195,16 @@ def main(argv) :
                         if result == 0 :
                             isEatingBefore = False
                             _isEatBreakfast = True
-                os.remove( ".//"+str(w*h) + ".png")
+                # os.remove(str(w*h) + ".png")
+    # cv2.imshow("sad",Rem)
+    # cv2.waitKey(0)
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
     # cv2.imshow("asdfghjk" , Rim)
     # cv2.waitKey(0)
 
 
 main(sys.argv[1:])
+# image = cv2.imread("1512.png") 
+# image = imutils.resize(image, height=400)
+# cv2.imwrite("1512.png", image)
+# print(text_from_image_file("1512.png","tha"))
