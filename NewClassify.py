@@ -29,7 +29,6 @@ def main() :
             x, y, w, h = cv2.boundingRect(cny)
             if(w * h > 1000 and w * h < 8000) :
                 # cv2.rectangle(Rim , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
-                # if( x > 10 and y > 18) :
                 roi = Rim[y-18:y+h+4, x-10:x+w+13]
                 cv2.imwrite( ".//Check Dataset/" + str(picture_id) + "/" + str(w*h) +".png" , roi)
         # cv2.imshow(str(count) , Rim)
