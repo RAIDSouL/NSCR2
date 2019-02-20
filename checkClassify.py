@@ -12,7 +12,12 @@ from imutils.perspective import four_point_transform
 import math
 
 pattern = re.compile(r"[^\u0E00-\u0E7Fa-zA-Z' ]|^'|'$|''")
-
+strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร","หลังอาหารเช้าทันที","หลังอาหารเช้า"]
+isEatingBefore = False
+_isEatBreakfast = False
+_isEatLunch = False
+_isEatDinner = False
+_isEatBedTime =False 
 
 def iterative_levenshtein(s, t, costs=(1, 1, 1)):
     """ 
@@ -105,8 +110,51 @@ def text_from_image_file(image_name,lang):
            ouput = ouput + [''.join(list_with_char_removed)]
     return ouput
 
+def check_str(result,txts) :
+    global _isEatBreakfast
+    global _isEatLunch
+    global _isEatDinner
+    global isEatingBefore
+    global _isEatBedTime
+    for txt in txts :
+        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
+        if check_cond[0] :
+            print(result)
+            if result == 0 :
+                _isEatBreakfast = True
+        elif check_cond[1] :
+            print(result)
+            if result == 0 :
+                _isEatLunch = True
+        elif check_cond[2] :
+            print(result)
+            if result == 0 :
+                _isEatDinner = True
+        elif check_cond[3] :
+            print(result)
+            if result == 0 :
+                _isEatBedTime = True
+        elif check_cond[4] :
+            print(result)
+            if result == 0 :
+                isEatingBefore = True
+        elif check_cond[5] :
+            print(result)
+            if result == 0 :
+                isEatingBefore = False
+        elif check_cond[6] :
+            print(result)
+            if result == 0 :
+                isEatingBefore = False
+                _isEatBreakfast = True
+        elif check_cond[7] :
+            print(result)
+            if result == 0 :
+                isEatingBefore = False
+                _isEatBreakfast = True
+
 def main(argv) :
-    strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร","หลังอาหารเช้าทันที","หลังอาหารเช้า"]
+
 
     image = cv2.imread(argv[0] , 0) 
     image = imutils.resize(image, height=900)
@@ -133,12 +181,6 @@ def main(argv) :
     knn = cv2.ml.KNearest_create()
     knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 
-    isEatingBefore = False
-    _isEatBreakfast = False
-    _isEatLunch = False
-    _isEatDinner = False
-    _isEatBedTime =False 
-
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
         # if(w * h > 500 and w * h < 8000) :
@@ -149,60 +191,18 @@ def main(argv) :
             # Reme = imutils.resize(Reme, height=100)
             cv2.imwrite( str(w*h) + ".png" , roi)
             txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-
+            os.remove(str(w*h) + ".png")
             im = roi[0:im.shape[1],0:im.shape[1]]
             im = cv2.resize(im, (80, 80))
             ho = hog.compute(im)
             data_train = ho.reshape(1,-1)
             _,result,_,_ = knn.findNearest(data_train,3)
-            print(txts)
-            for txt in txts :
-                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
+            # print(txts)
+            check_str(result,txts)
+            
 
-                if check_cond[0] :
-                    # print(result)
-                    if result == 0 :
-                        _isEatBreakfast = True
-                elif check_cond[1] :
-                    # print(result)
-                    if result == 0 :
-                        _isEatLunch = True
-                    
-                elif check_cond[2] :
-                    # print(result)
-                    if result == 0 :
-                        _isEatDinner = True
-                    
-                elif check_cond[3] :
-                    # print(result)
-                    if result == 0 :
-                        _isEatBedTime = True
-                    
-                elif check_cond[4] :
-                    print(result)
-                    if result == 0 :
-                        isEatingBefore = True
-                    
-                elif check_cond[5] :
-                    # print(result)
-                    if result == 0 :
-                        isEatingBefore = False
-                    
-                elif check_cond[6] :
-                    # print(result)
-                    if result == 0 :
-                        isEatingBefore = False
-                        _isEatBreakfast = True
-                    
-                elif check_cond[7] :
-                    # print(result)
-                    if result == 0 :
-                        isEatingBefore = False
-                        _isEatBreakfast = True
-                # print(isEatingBefore)
-            # os.remove(str(w*h) + ".png")
-    cv2.imshow("sad",Rem)
-    cv2.waitKey(0)
+    # cv2.imshow("sad",Rem)
+    # cv2.waitKey(0)
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
     # cv2.imshow("asdfghjk" , Rim)
     # cv2.waitKey(0)
