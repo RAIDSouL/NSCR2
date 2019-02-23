@@ -183,33 +183,32 @@ def main(argv) :
 
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
-        # if(w * h > 500 and w * h < 8000) :
         cv2.rectangle(Rem , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         if(y>=18 and x>=10) :
+            #another contour
+            # if(w > 230 and w < 250)
+            #     image = cv2.imread(str(w) + "+" +  str(h) + ".png" , 0) 
+
+
             roi = Rim[y-18:y+h+4, x-10:x+w+13]
             # Reme = roi.copy()
             # Reme = imutils.resize(Reme, height=100)
-            cv2.imwrite( str(w*h) + ".png" , roi)
+            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , roi)
             txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            # os.remove(str(w*h) + ".png")
+            # os.remove(str(w) + "+" +  str(h) + ".png")
             im = roi[0:im.shape[1],0:im.shape[1]]
             im = cv2.resize(im, (80, 80))
             ho = hog.compute(im)
             data_train = ho.reshape(1,-1)
             _,result,_,_ = knn.findNearest(data_train,3)
-            print(txts)
+            print(txts) 
             check_str(result,txts)
+           
+                
             
 
     cv2.imshow("sad",Rem)
     cv2.waitKey(0)
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
-    # cv2.imshow("asdfghjk" , Rim)
-    # cv2.waitKey(0)
-
 
 main(sys.argv[1:])
-# image = cv2.imread("1512.png") 
-# image = imutils.resize(image, height=400)
-# cv2.imwrite("1512.png", image)
-# print(text_from_image_file("1512.png","tha"))
