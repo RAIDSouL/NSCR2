@@ -191,13 +191,13 @@ def main(argv) :
             # Reme = imutils.resize(Reme, height=100)
             cv2.imwrite( str(w*h) + ".png" , roi)
             txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            os.remove(str(w*h) + ".png")
+            # os.remove(str(w*h) + ".png")
             im = roi[0:im.shape[1],0:im.shape[1]]
             im = cv2.resize(im, (80, 80))
             ho = hog.compute(im)
             data_train = ho.reshape(1,-1)
             _,result,_,_ = knn.findNearest(data_train,3)
-            # print(txts)
+            print(txts)
             check_str(result,txts)
             
 
