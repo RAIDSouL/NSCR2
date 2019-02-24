@@ -222,7 +222,7 @@ def main(argv) :
             Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
             cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
             txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
-
+            os.remove(str(w) + "+" +  str(h) + ".png")
             ###### Check STR TO DUMP ######
             check_str(result,txts)
 
