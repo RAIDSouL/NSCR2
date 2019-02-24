@@ -157,7 +157,7 @@ def main(argv) :
 
 
     image = cv2.imread(argv[0] , 0) 
-    image = imutils.resize(image, height=900)
+    image = imutils.resize(image, height=700)
     Rim = image.copy()
     Rem = image.copy()
     image = cv2.medianBlur(image,9)
@@ -175,11 +175,11 @@ def main(argv) :
     fname = argv[0].split(".")[0]
     datalists = []
 
-    hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
-    features_train = np.load("features_train.npy")
-    label_train = np.load("label_train.npy")
-    knn = cv2.ml.KNearest_create()
-    knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
+    # hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
+    # features_train = np.load("features_train.npy")
+    # label_train = np.load("label_train.npy")
+    # knn = cv2.ml.KNearest_create()
+    # knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
@@ -194,21 +194,21 @@ def main(argv) :
             # Reme = roi.copy()
             # Reme = imutils.resize(Reme, height=100)
             cv2.imwrite( str(w) + "+" +  str(h) + ".png" , roi)
-            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            # os.remove(str(w) + "+" +  str(h) + ".png")
-            im = roi[0:im.shape[1],0:im.shape[1]]
-            im = cv2.resize(im, (80, 80))
-            ho = hog.compute(im)
-            data_train = ho.reshape(1,-1)
-            _,result,_,_ = knn.findNearest(data_train,3)
-            print(txts) 
-            check_str(result,txts)
+    #         txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+    #         # os.remove(str(w) + "+" +  str(h) + ".png")
+    #         im = roi[0:im.shape[1],0:im.shape[1]]
+    #         im = cv2.resize(im, (80, 80))
+    #         ho = hog.compute(im)
+    #         data_train = ho.reshape(1,-1)
+    #         _,result,_,_ = knn.findNearest(data_train,3)
+    #         print(txts) 
+    #         check_str(result,txts)
            
                 
             
 
-    cv2.imshow("sad",Rem)
-    cv2.waitKey(0)
-    cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
+    # cv2.imshow("sad",Rem)
+    # cv2.waitKey(0)
+    # cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
 
 main(sys.argv[1:])

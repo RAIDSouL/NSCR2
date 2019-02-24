@@ -81,10 +81,20 @@ for char_id in range(0,2):
         #5 pictures
 
         #read pictures
-        im = cv2.imread(".//Check dataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
-        im = im[0:im.shape[1],0:im.shape[1]]
-        im = cv2.resize(im, (80, 80))
-        h = hog.compute(im)
+        image = cv2.imread("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
+        image = image[0:image.shape[0],0:image.shape[0]]
+        cv2.imshow("image" , image)
+        # cv2.waitKey(0)
+        image = cv2.resize(image, (80, 80))
+        image = cv2.medianBlur(image,9)
+        image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        # blurred = cv2.GaussianBlur(image, (7 , 7), 0)
+        # edged = cv2.Canny(blurred, 50, 200, 255)
+        # kernel = np.ones((3,3),np.uint8)
+        # im = cv2.dilate(edged,kernel,iterations = 1)
+        # cv2.imshow("image" , im)
+        # cv2.waitKey(0)
+        h = hog.compute(image)
         if count == 0:
             features_train = h.reshape(1,-1)
         else:
@@ -107,7 +117,7 @@ knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 _,result,_,_ = knn.findNearest(features_train,3)
 print(result)
 
-# np.save("features_train" , features_train)
-# np.save("label_train" , label_train)
+np.save("features_train0" , features_train)
+np.save("label_train0" , label_train)
 # print(features_train)
 # print(label_train)
