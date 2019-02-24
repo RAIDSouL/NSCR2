@@ -79,7 +79,7 @@ def tsplit(string, delimiters):
 
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
-    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1','--psm','6'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = open(output_name+'.txt','r',encoding='utf-8')
     str_read = d.read()
     # char_to_remove = temp.split()

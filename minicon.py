@@ -92,7 +92,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
 
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
-    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1','--psm','7'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = open(output_name+'.txt','r',encoding='utf-8')
     str_read = d.read()
     # char_to_remove = temp.split()
@@ -153,33 +153,50 @@ def check_str(result,txts) :
                 isEatingBefore = False
                 _isEatBreakfast = True
 
-image = cv2.imread("datatest/240+39.png" , 0) 
-Rem = image.copy()
-image = imutils.resize(image, height=150)
-blurred = cv2.GaussianBlur(image, (5 , 5), 0)
-edged = cv2.Canny(blurred, 50, 200, 255)
-kernel = np.ones((3,5),np.uint8)
-im = cv2.dilate(edged,kernel,iterations = 1)
-kernel = np.ones((1,30),np.uint8)
-im = cv2.erode(im,kernel,iterations = 1)
-cv2.imshow("im",im)
+image = cv2.imread("datatest/243+58.png" , 0) 
 
-contourmask,contours,hierarchy = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+image = imutils.resize(image, height=80)
+Rem = image.copy()
+
+top,bottom,left,right = [20]*4
+
+blurred = cv2.GaussianBlur(image, (3 , 3), 0)
+edged = cv2.Canny(blurred, 50, 200, 255)
+kernel = np.ones((1,10),np.uint8)
+im = cv2.dilate(edged,kernel,iterations = 1)
+
+img_with_bordor = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+
+contourmask,contours,hierarchy = cv2.findContours(img_with_bordor,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-for cnt in contours[1:] :
+hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
+features_train = np.load("features_train.npy")
+label_train = np.load("label_train.npy")
+knn = cv2.ml.KNearest_create()
+knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
+
+Rem = cv2.copyMakeBorder(Rem, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+for cnt in contours[0:] :
+    
     x, y, w, h = cv2.boundingRect(cnt)
-    cv2.rectangle(Rem , (x,y) , (x+w,y+h) , (0,0,255) , 2)
-    # roi = Rim[y-18:y+h+4, x-10:x+w+13]
-    # Reme = roi.copy()
-    # Reme = imutils.resize(Reme, height=100)
+    if( h / w > 0.52) :
+        roi = Rem[y:y+h, int((x+h)*0.8):x+w]
+    else :
+        roi = Rem[y:y+h, int((x+h)*0.9):x+w]
 
     cv2.imwrite( str(w) + "+" +  str(h) + ".png" , roi)
-    txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+    txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
+    os.remove(str(w) + "+" +  str(h) + ".png")
+    im = Rem[0:im.shape[1],0:im.shape[1]]
+    im = cv2.resize(im, (80, 80))
+    ho = hog.compute(im)
+    data_train = ho.reshape(1,-1)
+    _,result,_,_ = knn.findNearest(data_train,3)
 
-    # print(txts) 
-    # check_str(result,txts)
+    print(txts) 
+    check_str(result,txts)
+cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
 
-cv2.imshow("rem" , Rem)
-cv2.waitKey(0)
+
 

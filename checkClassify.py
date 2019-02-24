@@ -92,7 +92,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
 
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
-    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1','--psm','6'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = open(output_name+'.txt','r',encoding='utf-8')
     str_read = d.read()
     # char_to_remove = temp.split()
@@ -166,7 +166,8 @@ def main(argv) :
     edged = cv2.Canny(blurred, 50, 200, 255)
     kernel = np.ones((3,15),np.uint8)
     im = cv2.dilate(edged,kernel,iterations = 1)
-    # cv2.imshow("im",im)
+    cv2.imshow("im",im)
+    cv2.waitKey(0)
     kernel = np.ones((1,30),np.uint8)
     im = cv2.erode(im,kernel,iterations = 1)
 
@@ -198,7 +199,7 @@ def main(argv) :
             cv2.imwrite( str(w*h) + ".png" , roi)
             txts = text_from_image_file( str(w*h) + ".png" ,'tha')
             # os.remove(str(w*h) + ".png")
-
+            
             # hog+knn
             im = roi[0:im.shape[1],0:im.shape[1]]
             im = cv2.resize(im, (80, 80))
