@@ -183,22 +183,32 @@ def main(argv) :
 
     for cnt in contours[1:] :
         x, y, w, h = cv2.boundingRect(cnt)
-        # if(w * h > 500 and w * h < 8000) :
         cv2.rectangle(Rem , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         if(y>=18 and x>=10) :
-            roi = Rim[y-18:y+h+4, x-10:x+w+13]
+            #find str
+            str_only = Rim[y-18:y+h+4, x+h-2:x+w+13]
+            cv2.imwrite( str(w*h) + ".png" , str_only)
+            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+            print(txts)
+            # cv2.imshow("str" , str_only)
+            # cv2.waitKey(0)
+
             # Reme = roi.copy()
             # Reme = imutils.resize(Reme, height=100)
-            cv2.imwrite( str(w*h) + ".png" , roi)
-            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            # os.remove(str(w*h) + ".png")
-            im = roi[0:im.shape[1],0:im.shape[1]]
-            im = cv2.resize(im, (80, 80))
-            ho = hog.compute(im)
-            data_train = ho.reshape(1,-1)
-            _,result,_,_ = knn.findNearest(data_train,3)
-            print(txts)
-            check_str(result,txts)
+            # cv2.imwrite( str(w*h) + ".png" , roi)
+            # txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+            os.remove(str(w*h) + ".png")
+
+            #hog+knn
+            # roi = Rim[y-18:y+h+4, x-10:x+w+13]
+            # im = roi[0:im.shape[1],0:im.shape[1]]
+            # im = cv2.resize(im, (80, 80))
+            # ho = hog.compute(im)
+            # data_train = ho.reshape(1,-1)
+            # _,result,_,_ = knn.findNearest(data_train,3)
+
+            # print(txts)
+            # check_str(result,txts)
             
 
     cv2.imshow("sad",Rem)
