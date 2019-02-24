@@ -77,19 +77,6 @@ def tsplit(string, delimiters):
             
     return stack
 
-def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, _isRoutine, _periodHour) :
-    output = {}
-    output["isPeriod"] = _isPeriod
-    data = {}
-    data["isEatingBefore"] = _isEatBefore
-    data["isEatBreakfast"] = _isEatBreakfast
-    data["isEatLunch"] = _isEatLunch
-    data["isEatDinner"] = _isEatDinner
-    data["isEatBedTime"] = _isEatBedTime
-    output["data"] = data
-    conv_json = json.dumps(output, ensure_ascii = False)
-    print(conv_json)
-
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
     return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -110,76 +97,5 @@ def text_from_image_file(image_name,lang):
            ouput = ouput + [''.join(list_with_char_removed)]
     return ouput
 
-def check_str(result,txts) :
-    global _isEatBreakfast
-    global _isEatLunch
-    global _isEatDinner
-    global isEatingBefore
-    global _isEatBedTime
-    for txt in txts :
-        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
-        if check_cond[0] :
-            print(result)
-            if result == 0 :
-                _isEatBreakfast = True
-        elif check_cond[1] :
-            print(result)
-            if result == 0 :
-                _isEatLunch = True
-        elif check_cond[2] :
-            print(result)
-            if result == 0 :
-                _isEatDinner = True
-        elif check_cond[3] :
-            print(result)
-            if result == 0 :
-                _isEatBedTime = True
-        elif check_cond[4] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = True
-        elif check_cond[5] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
-        elif check_cond[6] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
-        elif check_cond[7] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
-
-image = cv2.imread("datatest/240+39.png" , 0) 
-Rem = image.copy()
-image = imutils.resize(image, height=150)
-blurred = cv2.GaussianBlur(image, (5 , 5), 0)
-edged = cv2.Canny(blurred, 50, 200, 255)
-kernel = np.ones((3,5),np.uint8)
-im = cv2.dilate(edged,kernel,iterations = 1)
-kernel = np.ones((1,30),np.uint8)
-im = cv2.erode(im,kernel,iterations = 1)
-cv2.imshow("im",im)
-
-contourmask,contours,hierarchy = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
-for cnt in contours[1:] :
-    x, y, w, h = cv2.boundingRect(cnt)
-    cv2.rectangle(Rem , (x,y) , (x+w,y+h) , (0,0,255) , 2)
-    # roi = Rim[y-18:y+h+4, x-10:x+w+13]
-    # Reme = roi.copy()
-    # Reme = imutils.resize(Reme, height=100)
-
-    cv2.imwrite( str(w) + "+" +  str(h) + ".png" , roi)
-    txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-
-    # print(txts) 
-    # check_str(result,txts)
-
-cv2.imshow("rem" , Rem)
-cv2.waitKey(0)
-
+txts = text_from_image_file("2210.png" ,'tha')
+print(txts)

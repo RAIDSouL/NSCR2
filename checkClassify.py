@@ -92,7 +92,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
 
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
-    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1 --tessdata-dir ./tessdata_best/'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = open(output_name+'.txt','r',encoding='utf-8')
     str_read = d.read()
     # char_to_remove = temp.split()
@@ -157,7 +157,7 @@ def main(argv) :
 
 
     image = cv2.imread(argv[0] , 0) 
-    image = imutils.resize(image, height=900)
+    image = imutils.resize(image, height=700)
     Rim = image.copy()
     Rem = image.copy()
     image = cv2.medianBlur(image,9)
@@ -185,41 +185,46 @@ def main(argv) :
         x, y, w, h = cv2.boundingRect(cnt)
         cv2.rectangle(Rem , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         if(y>=18 and x>=10) :
-            #find str
-            str_only = Rim[y-18:y+h+4, x+h-2:x+w+13]
-            cv2.imwrite( str(w*h) + ".png" , str_only)
-            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            print(txts)
-            # cv2.imshow("str" , str_only)
-            # cv2.waitKey(0)
-
-            # Reme = roi.copy()
-            # Reme = imutils.resize(Reme, height=100)
-            # cv2.imwrite( str(w*h) + ".png" , roi)
+            #find str without square
+            # str_only = Rim[y-18:y+h+4, x+h-2:x+w+13]
+            # cv2.imwrite( str(w*h) + ".png" , str_only)
             # txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            os.remove(str(w*h) + ".png")
 
-            #hog+knn
-            # roi = Rim[y-18:y+h+4, x-10:x+w+13]
-            # im = roi[0:im.shape[1],0:im.shape[1]]
-            # im = cv2.resize(im, (80, 80))
-            # ho = hog.compute(im)
-            # data_train = ho.reshape(1,-1)
-            # _,result,_,_ = knn.findNearest(data_train,3)
+            roi = Rim[y-18:y+h+4, x-10:x+w+13]
 
-            # print(txts)
-            # check_str(result,txts)
-            
+            #find str with square
+            Reme = roi.copy()
+            Reme = imutils.resize(Reme, height=100)
+            cv2.imwrite( str(w*h) + ".png" , roi)
+            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+            # os.remove(str(w*h) + ".png")
+
+            # hog+knn
+            im = roi[0:im.shape[1],0:im.shape[1]]
+            im = cv2.resize(im, (80, 80))
+            ho = hog.compute(im)
+            data_train = ho.reshape(1,-1)
+            _,result,_,_ = knn.findNearest(data_train,3)
+
+            print(txts)
+            check_str(result,txts)
+        else :
+            if y>18 :
+                cornor = Rim[y-18:y+h+4, x:x+w+13]
+                cv2.imwrite( str(w*h) + ".png" , cornor)
+                txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+
+                im = cornor[0:im.shape[1],0:im.shape[1]]
+                im = cv2.resize(im, (80, 80))
+                ho = hog.compute(im)
+                data_train = ho.reshape(1,-1)
+                _,result,_,_ = knn.findNearest(data_train,3)
+
+                print(txts)
+                check_str(result,txts)
 
     cv2.imshow("sad",Rem)
     cv2.waitKey(0)
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
-    # cv2.imshow("asdfghjk" , Rim)
-    # cv2.waitKey(0)
-
 
 main(sys.argv[1:])
-# image = cv2.imread("1512.png") 
-# image = imutils.resize(image, height=400)
-# cv2.imwrite("1512.png", image)
-# print(text_from_image_file("1512.png","tha"))
