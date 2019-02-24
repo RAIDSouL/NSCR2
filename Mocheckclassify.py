@@ -119,114 +119,116 @@ def check_str(result,txts) :
     for txt in txts :
         check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
         if check_cond[0] :
-            print(result)
-            if result == 0 :
-                _isEatBreakfast = True
+            # print(result)
+            # if result == 0 :
+            _isEatBreakfast = True
         elif check_cond[1] :
-            print(result)
-            if result == 0 :
-                _isEatLunch = True
+            # print(result)
+            # if result == 0 :
+            _isEatLunch = True
         elif check_cond[2] :
-            print(result)
-            if result == 0 :
-                _isEatDinner = True
+            # print(result)
+            # if result == 0 :
+            _isEatDinner = True
         elif check_cond[3] :
-            print(result)
-            if result == 0 :
-                _isEatBedTime = True
+            # print(result)
+            # if result == 0 :
+            _isEatBedTime = True
         elif check_cond[4] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = True
+            # print(result)
+            # if result == 0 :
+            isEatingBefore = True
         elif check_cond[5] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
+            # print(result)
+            # if result == 0 :
+            isEatingBefore = False
         elif check_cond[6] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
+            # print(result)
+            # if result == 0 :
+            isEatingBefore = False
+            _isEatBreakfast = True
         elif check_cond[7] :
-            print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
+            # print(result)
+            # if result == 0 :
+            isEatingBefore = False
+            _isEatBreakfast = True
+
+
+
+
+
+
+
 
 def main(argv) :
 
+    ###imageProcessing###
+    Image = cv2.imread(argv[0] , 0)
+    Image = imutils.resize(Image , height=700)
+    Image_contour = Image.copy()
+    Image_hog = Image.copy()
+    Image_padding = Image.copy()
 
-    image = cv2.imread(argv[0] , 0) 
-    image = imutils.resize(image, height=700)
-    Rim = image.copy()
-    Rem = image.copy()
-    image = cv2.medianBlur(image,9)
-    image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-    blurred = cv2.GaussianBlur(image, (7 , 7), 0)
+    ###padding parameter###
+    top,bottom,left,right = [50]*4
+
+    #Contour
+    Image_contour = cv2.medianBlur(Image_contour,9)
+    Image_contour = cv2.adaptiveThreshold(Image_contour,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+    blurred = cv2.GaussianBlur(Image_contour, (7 , 7), 0)
     edged = cv2.Canny(blurred, 50, 200, 255)
     kernel = np.ones((3,15),np.uint8)
-    im = cv2.dilate(edged,kernel,iterations = 1)
-    cv2.imshow("im",im)
-    cv2.waitKey(0)
+    Image_contour = cv2.dilate(edged,kernel,iterations = 1)
     kernel = np.ones((1,30),np.uint8)
-    im = cv2.erode(im,kernel,iterations = 1)
-
-    contourmask,contours,hierarchy = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    Image_contour = cv2.erode(Image_contour,kernel,iterations = 1)
+    Image_contour_with_padding = cv2.copyMakeBorder(Image_contour, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+    _,contours,_ = cv2.findContours(Image_contour_with_padding,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    Image_padding = cv2.copyMakeBorder(Image_padding, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+
+    #???#
     fname = argv[0].split(".")[0]
+
     datalists = []
 
+    ###HOG###
     hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
-    features_train = np.load("features_train.npy")
-    label_train = np.load("label_train.npy")
+    features_train = np.load("./version1/features_train0.npy")
+    label_train = np.load("./version1/label_train0.npy")
     knn = cv2.ml.KNearest_create()
     knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 
-    for cnt in contours[1:] :
+    ###Contour Loop###
+    for cnt in contours[0:] :
+        
         x, y, w, h = cv2.boundingRect(cnt)
-        cv2.rectangle(Rem , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
-        if(y>=18 and x>=10) :
-            #find str without square
-            # str_only = Rim[y-18:y+h+4, x+h-2:x+w+13]
-            # cv2.imwrite( str(w*h) + ".png" , str_only)
-            # txts = text_from_image_file( str(w*h) + ".png" ,'tha')
+        ################ rectangle if want  #######################
+        # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
+        
+        ########## HOG ############
+        Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
+        Image_hog = cv2.resize(Image_hog, (80, 80))
+        Image_hog = cv2.medianBlur(Image_hog,9)
+        Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        ho = hog.compute(Image_hog)
+        data_train_hog = ho.reshape(1,-1)
+        _,result,_,_ = knn.findNearest(data_train_hog,4)
+        # print(result)
 
-            roi = Rim[y-18:y+h+4, x-10:x+w+13]
+        #### Check HOG then Check STR ####
+        if(result[0][0] == 0) :
+            ########## STR ############
+            Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
+            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
+            txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
 
-            #find str with square
-            Reme = roi.copy()
-            Reme = imutils.resize(Reme, height=100)
-            cv2.imwrite( str(w*h) + ".png" , roi)
-            txts = text_from_image_file( str(w*h) + ".png" ,'tha')
-            # os.remove(str(w*h) + ".png")
-
-            # hog+knn
-            im = roi[0:im.shape[1],0:im.shape[1]]
-            im = cv2.resize(im, (80, 80))
-            ho = hog.compute(im)
-            data_train = ho.reshape(1,-1)
-            _,result,_,_ = knn.findNearest(data_train,3)
-            
-
-            print(txts)
+            ###### Check STR TO DUMP ######
             check_str(result,txts)
-        else :
-            if y>18 :
-                cornor = Rim[y-18:y+h+4, x:x+w+13]
-                cv2.imwrite( str(w*h) + ".png" , cornor)
-                txts = text_from_image_file( str(w*h) + ".png" ,'tha')
 
-                im = cornor[0:im.shape[1],0:im.shape[1]]
-                im = cv2.resize(im, (80, 80))
-                ho = hog.compute(im)
-                data_train = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train,3)
 
-                print(txts)
-                check_str(result,txts)
-
-    cv2.imshow("sad",Rem)
-    cv2.waitKey(0)
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
+    # cv2.imshow("IMG", Image_padding)
+    # cv2.waitKey(0)
 
 main(sys.argv[1:])
