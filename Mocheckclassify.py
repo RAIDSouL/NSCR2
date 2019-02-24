@@ -120,38 +120,38 @@ def check_str(result,txts) :
         check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
         if check_cond[0] :
             # print(result)
-            # if result == 0 :
-            _isEatBreakfast = True
+            if result == 0 :
+                _isEatBreakfast = True
         elif check_cond[1] :
             # print(result)
-            # if result == 0 :
-            _isEatLunch = True
+            if result == 0 :
+                _isEatLunch = True
         elif check_cond[2] :
             # print(result)
-            # if result == 0 :
-            _isEatDinner = True
+            if result == 0 :
+                _isEatDinner = True
         elif check_cond[3] :
             # print(result)
-            # if result == 0 :
-            _isEatBedTime = True
+            if result == 0 :
+                _isEatBedTime = True
         elif check_cond[4] :
             # print(result)
-            # if result == 0 :
-            isEatingBefore = True
+            if result == 0 :
+                isEatingBefore = True
         elif check_cond[5] :
             # print(result)
-            # if result == 0 :
-            isEatingBefore = False
+            if result == 0 :
+                isEatingBefore = False
         elif check_cond[6] :
             # print(result)
-            # if result == 0 :
-            isEatingBefore = False
-            _isEatBreakfast = True
+            if result == 0 :
+                isEatingBefore = False
+                _isEatBreakfast = True
         elif check_cond[7] :
             # print(result)
-            # if result == 0 :
-            isEatingBefore = False
-            _isEatBreakfast = True
+            if result == 0 :
+                isEatingBefore = False
+                _isEatBreakfast = True
 
 
 
@@ -194,8 +194,8 @@ def main(argv) :
 
     ###HOG###
     hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
-    features_train = np.load("./version1/features_train0.npy")
-    label_train = np.load("./version1/label_train0.npy")
+    features_train = np.load("./version1/features_train1.npy")
+    label_train = np.load("./version1/label_train1.npy")
     knn = cv2.ml.KNearest_create()
     knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 
@@ -206,24 +206,69 @@ def main(argv) :
         ################ rectangle if want  #######################
         # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
         
-        ########## HOG ############
-        Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
-        Image_hog = cv2.resize(Image_hog, (80, 80))
-        Image_hog = cv2.medianBlur(Image_hog,9)
-        Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-        ho = hog.compute(Image_hog)
-        data_train_hog = ho.reshape(1,-1)
-        _,result,_,_ = knn.findNearest(data_train_hog,4)
-        # print(result)
+        if w  > 235 :
 
-        #### Check HOG then Check STR ####
-        if(result[0][0] == 0) :
+            Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
+            # cv2.imshow("sad",Image_mini_con)
+            # cv2.waitKey(0)
+            Image_mini_con = imutils.resize(Image_mini_con , height = 80)
+            Image_mini_con_border = Image_mini_con.copy()
+
+            blurred = cv2.GaussianBlur(Image_mini_con, (3 , 3), 0)
+            edged = cv2.Canny(blurred, 50, 200, 255)
+            kernel = np.ones((2,6),np.uint8)
+            im = cv2.dilate(edged,kernel,iterations = 3)
+
+            _,contours_2,_ = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+            contours_2 = sorted(contours_2, key=cv2.contourArea, reverse=True)
+            
+            for cnt_2 in contours_2[0:] :
+                x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
+                # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
+                img_mini_con = Image_mini_con_border[y2:y2+h2,x2:x2+h2+4]
+            
+                #     cv2.imshow("asd",img_mini_con)
+                #     cv2.waitKey(0)
+                img_mini_con = cv2.resize(img_mini_con, (80,80))
+                img_mini_con = cv2.medianBlur(img_mini_con,9)
+                img_mini_con = cv2.adaptiveThreshold(img_mini_con,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+                # cv2.imshow("ads" , img_mini_con)
+                # cv2.waitKey(0)
+                ho = hog.compute(img_mini_con)
+                data_train2 = ho.reshape(1,-1)
+                _,result2,_,_ = knn.findNearest(data_train2,4)
+
+                ### only str
+                if result2[0][0] == 0 :
+                    if( h2 / w2 > 0.52) :
+                        roi = Image_mini_con_border[y2:y2+h2, int((x2+h2)*0.8):x2+w2]
+                        # print("sad")
+                    else :
+                        roi = Image_mini_con_border[y2:y2+h2, int((x2+h2)*0.9):x2+w2]
+                    rand_name_file = np.random.randint(1000 , size = 1)
+                    cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
+                    txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
+                    os.remove(str(rand_name_file[0]) + ".png")
+                    check_str(result2,txts2)
+
+        else :
+
             ########## STR ############
             Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
             cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
             txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
             os.remove(str(w) + "+" +  str(h) + ".png")
-            ###### Check STR TO DUMP ######
+
+            ########## HOG ############
+            Image_hog = Image_padding[y-18:y+h+4 , x-10:x+w+4]
+            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_hog)
+            Image_hog = cv2.resize(Image_hog, (80, 80))
+            Image_hog = cv2.medianBlur(Image_hog,9)
+            Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+            ho = hog.compute(Image_hog)
+            data_train_hog = ho.reshape(1,-1)
+            _,result,_,_ = knn.findNearest(data_train_hog,4)
+
             check_str(result,txts)
 
 

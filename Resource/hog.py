@@ -73,15 +73,16 @@ import cv2
 count = 0
 hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
 charlist = "TF"
-label_train = np.zeros((40,1))
+label_train = np.zeros((62,1))
 colorlist = ["red","green"]
-
+n_sets = [42,22]
 for char_id in range(0,2):
-    for im_id in range(1,21):
+    for im_id in range(1,n_sets[char_id]):
         #5 pictures
 
         #read pictures
         image = cv2.imread("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
+        print("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png")
         image = image[0:image.shape[0],0:image.shape[0]]
         cv2.imshow("image" , image)
         # cv2.waitKey(0)
@@ -117,7 +118,7 @@ knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 _,result,_,_ = knn.findNearest(features_train,3)
 print(result)
 
-np.save("features_train0" , features_train)
-np.save("label_train0" , label_train)
+np.save("features_train1" , features_train)
+np.save("label_train1" , label_train)
 # print(features_train)
 # print(label_train)
