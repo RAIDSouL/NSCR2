@@ -19,6 +19,61 @@ _isEatLunch = False
 _isEatDinner = False
 _isEatBedTime =False 
 
+def deepCheck(raw_image,hog,knn):
+    # cv2.imshow("asd",raw_image)
+    # cv2.waitKey(0)
+
+    blurred = cv2.GaussianBlur(raw_image, (3 , 3), 0)
+    edged = cv2.Canny(blurred, 50, 200, 255)
+    kernel = np.ones((2,6),np.uint8)
+    im = cv2.dilate(edged,kernel,iterations = 3)
+    
+    # cv2.imshow("asd",im)
+    # cv2.waitKey(0)
+
+    _,contours_2,_ = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    contours_2 = sorted(contours_2, key=cv2.contourArea, reverse=True)
+    
+    for cnt_2 in contours_2[0:int(len(contours_2))] :
+        x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
+        # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
+        img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
+        img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
+    
+        # cv2.imshow("asd",img_for_ocr_text)
+     
+        img_mini_con = cv2.resize(img_mini_con, (80,80))
+        img_mini_con = cv2.medianBlur(img_mini_con,9)
+        img_mini_con = cv2.adaptiveThreshold(img_mini_con,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        # cv2.imshow("sdsd" , img_for_ocr_text)
+        # cv2.waitKey(0)
+        ho = hog.compute(img_mini_con)
+        data_train2 = ho.reshape(1,-1)
+        _,result2,_,_ = knn.findNearest(data_train2,4)
+
+        
+
+        ### only str
+
+        if result2[0][0] == 0 :
+            if( h2 / w2 > 0.52) :
+                roi = img_for_ocr_text[0:h2, int((h2)*0.7):w2]
+                # if roi.shape[0] > 0 and roi.shape[1] > 0 :
+                    # cv2.imshow("sdss" , roi)
+                    # cv2.waitKey(0)
+            else :
+                roi = img_for_ocr_text[0:h2, int((h2)*0.8):w2]
+                # if roi.shape[0] > 0 and roi.shape[1] > 0 :
+                #     cv2.imshow(str((x2+h2)*0.9) , roi)
+                #     cv2.waitKey(0)
+            rand_name_file = np.random.randint(1000 , size = 1)
+            cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
+            txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
+            # print(txts2)
+            os.remove(str(rand_name_file[0]) + ".png")
+            check_str(result2[0][0],txts2)
+
+
 def iterative_levenshtein(s, t, costs=(1, 1, 1)):
     """ 
         iterative_levenshtein(s, t) -> ldist
@@ -123,7 +178,6 @@ def check_str(result,txts) :
             if result == 0 :
                 _isEatBreakfast = True
         elif check_cond[1] :
-            # print(result)
             if result == 0 :
                 _isEatLunch = True
         elif check_cond[2] :
@@ -207,49 +261,13 @@ def main(argv) :
         # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
         
         if w  > 235 :
-
             Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
             # cv2.imshow("sad",Image_mini_con)
             # cv2.waitKey(0)
             Image_mini_con = imutils.resize(Image_mini_con , height = 80)
             Image_mini_con_border = Image_mini_con.copy()
 
-            blurred = cv2.GaussianBlur(Image_mini_con, (3 , 3), 0)
-            edged = cv2.Canny(blurred, 50, 200, 255)
-            kernel = np.ones((2,6),np.uint8)
-            im = cv2.dilate(edged,kernel,iterations = 3)
-
-            _,contours_2,_ = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-            contours_2 = sorted(contours_2, key=cv2.contourArea, reverse=True)
-            
-            for cnt_2 in contours_2[0:] :
-                x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
-                # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
-                img_mini_con = Image_mini_con_border[y2:y2+h2,x2:x2+h2+4]
-            
-                #     cv2.imshow("asd",img_mini_con)
-                #     cv2.waitKey(0)
-                img_mini_con = cv2.resize(img_mini_con, (80,80))
-                img_mini_con = cv2.medianBlur(img_mini_con,9)
-                img_mini_con = cv2.adaptiveThreshold(img_mini_con,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-                # cv2.imshow("ads" , img_mini_con)
-                # cv2.waitKey(0)
-                ho = hog.compute(img_mini_con)
-                data_train2 = ho.reshape(1,-1)
-                _,result2,_,_ = knn.findNearest(data_train2,4)
-
-                ### only str
-                if result2[0][0] == 0 :
-                    if( h2 / w2 > 0.52) :
-                        roi = Image_mini_con_border[y2:y2+h2, int((x2+h2)*0.8):x2+w2]
-                        # print("sad")
-                    else :
-                        roi = Image_mini_con_border[y2:y2+h2, int((x2+h2)*0.9):x2+w2]
-                    rand_name_file = np.random.randint(1000 , size = 1)
-                    cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
-                    txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
-                    os.remove(str(rand_name_file[0]) + ".png")
-                    check_str(result2,txts2)
+            deepCheck(Image_mini_con,hog,knn)
 
         else :
 
@@ -269,9 +287,13 @@ def main(argv) :
             data_train_hog = ho.reshape(1,-1)
             _,result,_,_ = knn.findNearest(data_train_hog,4)
 
-            check_str(result,txts)
+            check_str(result[0][0],txts)
 
-
+    global isEatingBefore
+    global  _isEatBreakfast 
+    global  _isEatLunch 
+    global  _isEatDinner 
+    global   _isEatBedTime 
     cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
     # cv2.imshow("IMG", Image_padding)
     # cv2.waitKey(0)
