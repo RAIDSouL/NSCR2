@@ -1,3 +1,4 @@
+#5-3-62
 import cv2
 import sys
 import re
@@ -10,15 +11,13 @@ import subprocess
 from imutils import contours
 from imutils.perspective import four_point_transform
 import math
-
 pattern = re.compile(r"[^\u0E00-\u0E7Fa-zA-Z' ]|^'|'$|''")
-strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร","หลังอาหารเช้าทันที","หลังอาหารเช้า"]
+strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร"]
 isEatingBefore = False
 _isEatBreakfast = False
 _isEatLunch = False
 _isEatDinner = False
 _isEatBedTime =False 
-
 def deepCheck(raw_image,hog,knn):
     # cv2.imshow("asd",raw_image)
     # cv2.waitKey(0)
@@ -45,7 +44,7 @@ def deepCheck(raw_image,hog,knn):
         img_mini_con = cv2.resize(img_mini_con, (80,80))
         img_mini_con = cv2.medianBlur(img_mini_con,9)
         img_mini_con = cv2.adaptiveThreshold(img_mini_con,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-        # cv2.imshow("sdsd" , img_for_ocr_text)
+        # cv2.imshow("sdsd" , img_mini_con)
         # cv2.waitKey(0)
         ho = hog.compute(img_mini_con)
         data_train2 = ho.reshape(1,-1)
@@ -59,13 +58,12 @@ def deepCheck(raw_image,hog,knn):
             if( h2 / w2 > 0.52) :
                 roi = img_for_ocr_text[0:h2, int((h2)*0.7):w2]
                 # if roi.shape[0] > 0 and roi.shape[1] > 0 :
-                    # cv2.imshow("sdss" , roi)
-                    # cv2.waitKey(0)
+                # cv2.imshow("sdss" , roi)
+                # cv2.waitKey(0)
             else :
                 roi = img_for_ocr_text[0:h2, int((h2)*0.8):w2]
-                # if roi.shape[0] > 0 and roi.shape[1] > 0 :
-                #     cv2.imshow(str((x2+h2)*0.9) , roi)
-                #     cv2.waitKey(0)
+                # cv2.imshow("sdss" , roi)
+                # cv2.waitKey(0)
             rand_name_file = np.random.randint(1000 , size = 1)
             cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
             txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
@@ -171,48 +169,34 @@ def check_str(result,txts) :
     global _isEatDinner
     global isEatingBefore
     global _isEatBedTime
+
+    #Check signed
+    if result != 0 :
+        return
+
+
     for txt in txts :
-        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-1)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
+
+        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx))) ) or txt.find(idx) >= 0) for idx in strTime ]
+        temp = check_cond.copy()
+        for i in range(3,-1,-1) :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-i)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
+            if (np.sum(check_cond) <= np.sum(temp) ) and np.sum(check_cond) > 0 :
+                temp = check_cond
+        check_cond = temp
+
         if check_cond[0] :
-            # print(result)
-            if result == 0 :
                 _isEatBreakfast = True
         elif check_cond[1] :
-            if result == 0 :
                 _isEatLunch = True
         elif check_cond[2] :
-            # print(result)
-            if result == 0 :
                 _isEatDinner = True
         elif check_cond[3] :
-            # print(result)
-            if result == 0 :
                 _isEatBedTime = True
         elif check_cond[4] :
-            # print(result)
-            if result == 0 :
                 isEatingBefore = True
         elif check_cond[5] :
-            # print(result)
-            if result == 0 :
                 isEatingBefore = False
-        elif check_cond[6] :
-            # print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
-        elif check_cond[7] :
-            # print(result)
-            if result == 0 :
-                isEatingBefore = False
-                _isEatBreakfast = True
-
-
-
-
-
-
-
 
 def main(argv) :
 
@@ -252,7 +236,7 @@ def main(argv) :
     label_train = np.load("./version1/label_train1.npy")
     knn = cv2.ml.KNearest_create()
     knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
-
+ 
     ###Contour Loop###
     for cnt in contours[0:] :
         
@@ -270,7 +254,9 @@ def main(argv) :
             deepCheck(Image_mini_con,hog,knn)
 
         else :
-
+            ### Check is image #####
+            if w < 2 or h < 2 :
+                continue
             ########## STR ############
             Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
             cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
@@ -278,15 +264,23 @@ def main(argv) :
             os.remove(str(w) + "+" +  str(h) + ".png")
 
             ########## HOG ############
-            Image_hog = Image_padding[y-18:y+h+4 , x-10:x+w+4]
-            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_hog)
+            Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
+            # try : 
+            #     cv2.imshow( "Test" , Image_padding[y-5:y+h+4 , x+h:x+w+10])
+            #     cv2.waitKey(0)
+            # except :
+            #     print("Error >> ",x,y,w,h)
             Image_hog = cv2.resize(Image_hog, (80, 80))
             Image_hog = cv2.medianBlur(Image_hog,9)
             Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
             ho = hog.compute(Image_hog)
             data_train_hog = ho.reshape(1,-1)
-            _,result,_,_ = knn.findNearest(data_train_hog,4)
-
+            _,result,_,_ = knn.findNearest(data_train_hog,3)
+            # print(txts)
+            # print(result[0][0])
+            # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
+            #     cv2.imshow("lunch",Image_hog)
+            #     cv2.waitKey(0)
             check_str(result[0][0],txts)
 
     global isEatingBefore
