@@ -37,6 +37,7 @@ def deepCheck(raw_image,hog,knn):
         x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
         # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
+        cv2.imwrite( str(int(w2*h2)) + ".png" , img_mini_con)
         img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
     
         # cv2.imshow("asd",img_for_ocr_text)
@@ -243,7 +244,8 @@ def main(argv) :
         x, y, w, h = cv2.boundingRect(cnt)
         ################ rectangle if want  #######################
         # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-        
+        imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
+        cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
         if w  > 235 :
             Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
             # cv2.imshow("sad",Image_mini_con)
@@ -259,9 +261,9 @@ def main(argv) :
                 continue
             ########## STR ############
             Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
-            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
+            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
             txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
-            os.remove(str(w) + "+" +  str(h) + ".png")
+            # os.remove(str(w) + "+" +  str(h) + ".png")
 
             ########## HOG ############
             Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
