@@ -9,6 +9,7 @@ import numpy as np
 import subprocess
 from imutils import contours
 from imutils.perspective import four_point_transform
+from IPython.core.debugger import set_trace
 
 
  
@@ -60,6 +61,18 @@ def iterative_levenshtein(s, t, costs=(1, 1, 1)):
     
  
     return dist[row][col]
+
+def advance_search_str(i,txt):
+    output = []
+    for idx in strTime :
+        if (len(idx)-i)/2 < 0 :
+            output.append(False)
+        else :
+            if (iterative_levenshtein(idx,txt) <= math.floor((len(idx)-i)/2) ) or txt.find(idx) >= 0 :
+                output.append(True) 
+            else :
+                output.append(False) 
+    return output
 
 def tsplit(string, delimiters):
     """Behaves str.split but supports multiple delimiters."""
@@ -145,28 +158,46 @@ def main(argv) :
         _isEatDinner = False
         _isEatBedTime =False
         # print(datalists)
+
         for idx,data in enumerate(strTime) :
             for txt in datalists :
-                check = (iterative_levenshtein(data,txt) <= math.floor((len(data)-1)/2) or txt.find(data) >= 0)
-                if check and idx == 0 :
+
+                if txt == "เม็ด" :
+                    continue
+                
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx))) ) or txt.find(idx) >= 0) for idx in strTime ]
+                temp = check_cond.copy()
+
+                max_len_strTime = int(max([len(i) for i in strTime])/2)
+                for i in range(max_len_strTime-1,-1,-1) :
+                    check_cond = advance_search_str(i,txt)
+                    if (np.sum(check_cond) <= np.sum(temp) ) and np.sum(check_cond) > 0 :
+                        temp = check_cond
+                check_cond = temp
+
+                if np.sum(check_cond) > 2 :
+                    continue
+
+                if check_cond[0] and idx == 0 :
                     _isEatBreakfast = True
-                elif check and idx == 1 :
+                elif check_cond[1] and idx == 1 :
                     _isEatLunch = True
-                elif check and idx == 2 :
+                elif check_cond[2] and idx == 2 :
+                    
                     _isEatDinner = True
-                elif check and idx == 3 :
+                elif check_cond[3] and idx == 3 :
                     _isEatBedTime = True
-                elif check and idx == 4 :
+                elif check_cond[4] and idx == 4 :
                     isEatingBefore = True
-                elif check and idx == 5 :
+                elif check_cond[5] and idx == 5 :
                     isEatingBefore = False
-                elif check and idx == 6 :
-                    isEatingBefore = False
-                    _isEatBreakfast = True
-                elif check and idx == 7 :
+                elif check_cond[6] and idx == 6 :
                     isEatingBefore = False
                     _isEatBreakfast = True
-                elif check and idx == 8 :
+                elif check_cond[7] and idx == 7 :
+                    isEatingBefore = False
+                    _isEatBreakfast = True
+                elif check_cond[8] and idx == 8 :
                     isEatingBefore = True
                     _isEatBreakfast = True
     except :
