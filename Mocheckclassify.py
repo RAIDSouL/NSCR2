@@ -201,98 +201,98 @@ def check_str(result,txts) :
                 isEatingBefore = False
 
 def main(argv) :
+    try :
+        ###imageProcessing###
+        Image = cv2.imread(argv[0] , 0)
+        Image = imutils.resize(Image , height=700)
+        Image_contour = Image.copy()
+        Image_hog = Image.copy()
+        Image_padding = Image.copy()
 
-    ###imageProcessing###
-    Image = cv2.imread(argv[0] , 0)
-    Image = imutils.resize(Image , height=700)
-    Image_contour = Image.copy()
-    Image_hog = Image.copy()
-    Image_padding = Image.copy()
+        ###padding parameter###
+        top,bottom,left,right = [50]*4
 
-    ###padding parameter###
-    top,bottom,left,right = [50]*4
+        #Contour
+        Image_contour = cv2.medianBlur(Image_contour,9)
+        Image_contour = cv2.adaptiveThreshold(Image_contour,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        blurred = cv2.GaussianBlur(Image_contour, (7 , 7), 0)
+        edged = cv2.Canny(blurred, 50, 200, 255)
+        kernel = np.ones((3,15),np.uint8)
+        Image_contour = cv2.dilate(edged,kernel,iterations = 1)
+        kernel = np.ones((1,30),np.uint8)
+        Image_contour = cv2.erode(Image_contour,kernel,iterations = 1)
+        Image_contour_with_padding = cv2.copyMakeBorder(Image_contour, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+        _,contours,_ = cv2.findContours(Image_contour_with_padding,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-    #Contour
-    Image_contour = cv2.medianBlur(Image_contour,9)
-    Image_contour = cv2.adaptiveThreshold(Image_contour,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-    blurred = cv2.GaussianBlur(Image_contour, (7 , 7), 0)
-    edged = cv2.Canny(blurred, 50, 200, 255)
-    kernel = np.ones((3,15),np.uint8)
-    Image_contour = cv2.dilate(edged,kernel,iterations = 1)
-    kernel = np.ones((1,30),np.uint8)
-    Image_contour = cv2.erode(Image_contour,kernel,iterations = 1)
-    Image_contour_with_padding = cv2.copyMakeBorder(Image_contour, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
-    _,contours,_ = cv2.findContours(Image_contour_with_padding,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        Image_padding = cv2.copyMakeBorder(Image_padding, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
 
-    Image_padding = cv2.copyMakeBorder(Image_padding, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+        #???#
+        fname = argv[0].split(".")[0]
 
-    #???#
-    fname = argv[0].split(".")[0]
+        datalists = []
 
-    datalists = []
+        ###HOG###
+        hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
+        features_train = np.load("./version1/features_train5.npy")
+        label_train = np.load("./version1/label_train5.npy")
+        knn = cv2.ml.KNearest_create()
+        knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
+    
+        ###Contour Loop###
+        for cnt in contours[0:] :
+            
+            x, y, w, h = cv2.boundingRect(cnt)
+            ################ rectangle if want  #######################
+            # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
+            # imgsss = Image_padding[y-16:y+h+4 , x-10:x+w+13]
+            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
+            if w  > 235 :
+                Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
+                # cv2.imshow("sad",Image_mini_con)
+                # cv2.waitKey(0)
+                Image_mini_con = imutils.resize(Image_mini_con , height = 80)
+                Image_mini_con_border = Image_mini_con.copy()
 
-    ###HOG###
-    hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
-    features_train = np.load("./version1/features_train5.npy")
-    label_train = np.load("./version1/label_train5.npy")
-    knn = cv2.ml.KNearest_create()
-    knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
- 
-    ###Contour Loop###
-    for cnt in contours[0:] :
-        
-        x, y, w, h = cv2.boundingRect(cnt)
-        ################ rectangle if want  #######################
-        # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-        # imgsss = Image_padding[y-16:y+h+4 , x-10:x+w+13]
-        # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
-        if w  > 235 :
-            Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
-            # cv2.imshow("sad",Image_mini_con)
-            # cv2.waitKey(0)
-            Image_mini_con = imutils.resize(Image_mini_con , height = 80)
-            Image_mini_con_border = Image_mini_con.copy()
+                deepCheck(Image_mini_con,hog,knn)
 
-            deepCheck(Image_mini_con,hog,knn)
+            else :
+                ### Check is image #####
+                if w < 2 or h < 2 :
+                    continue
+                ########## STR ############
+                Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
+                cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
+                txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
+                os.remove(str(w) + "+" +  str(h) + ".png")
 
-        else :
-            ### Check is image #####
-            if w < 2 or h < 2 :
-                continue
-            ########## STR ############
-            Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
-            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
-            txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
-            os.remove(str(w) + "+" +  str(h) + ".png")
+                ########## HOG ############
+                Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
+                # try : 
+                #     cv2.imshow( "Test" , Image_padding[y-5:y+h+4 , x+h:x+w+10])
+                #     cv2.waitKey(0)
+                # except :
+                #     print("Error >> ",x,y,w,h)
+                Image_hog = cv2.resize(Image_hog, (80, 80))
+                Image_hog = cv2.medianBlur(Image_hog,9)
+                Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+                ho = hog.compute(Image_hog)
+                data_train_hog = ho.reshape(1,-1)
+                _,result,_,_ = knn.findNearest(data_train_hog,2)
+                # print(txts)
+                # print(result[0][0])
+                # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
+                #     cv2.imshow("lunch",Image_hog)
+                #     cv2.waitKey(0)
+                check_str(result[0][0],txts)
 
-            ########## HOG ############
-            Image_hog = Image_padding[y-18:y+h+4 , x-10:x+h+4]
-            # try : 
-            #     cv2.imshow( "Test" , Image_padding[y-5:y+h+4 , x+h:x+w+10])
-            #     cv2.waitKey(0)
-            # except :
-            #     print("Error >> ",x,y,w,h)
-            Image_hog = cv2.resize(Image_hog, (80, 80))
-            Image_hog = cv2.medianBlur(Image_hog,9)
-            Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-            ho = hog.compute(Image_hog)
-            data_train_hog = ho.reshape(1,-1)
-            _,result,_,_ = knn.findNearest(data_train_hog,2)
-            # print(txts)
-            # print(result[0][0])
-            # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
-            #     cv2.imshow("lunch",Image_hog)
-            #     cv2.waitKey(0)
-            check_str(result[0][0],txts)
-
-    global isEatingBefore
-    global  _isEatBreakfast 
-    global  _isEatLunch 
-    global  _isEatDinner 
-    global   _isEatBedTime 
-    cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
-    # cv2.imshow("IMG", Image_padding)
-    # cv2.waitKey(0)
+    except :
+        global isEatingBefore 
+        global _isEatBreakfast
+        global _isEatLunch 
+        global _isEatDinner 
+        global _isEatBedTime
+    finally :
+        cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
 
 main(sys.argv[1:])
