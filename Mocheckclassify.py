@@ -164,6 +164,19 @@ def text_from_image_file(image_name,lang):
            ouput = ouput + [''.join(list_with_char_removed)]
     return ouput
 
+def advance_search_str(i,txt):
+    output = []
+    for idx in strTime :
+        if (len(idx)-i)/2 < 0 :
+            output.append(False)
+        else :
+            if (iterative_levenshtein(idx,txt) <= math.floor((len(idx)-i)/2) ) or txt.find(idx) >= 0 :
+                output.append(True) 
+            else :
+                output.append(False) 
+    return output
+
+
 def check_str(result,txts) :
     global _isEatBreakfast
     global _isEatLunch
@@ -172,21 +185,24 @@ def check_str(result,txts) :
     global _isEatBedTime
 
     #Check signed
-    if result != 0 :
+    if result != 0  :
         return
-
 
     for txt in txts :
 
         check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx))) ) or txt.find(idx) >= 0) for idx in strTime ]
         temp = check_cond.copy()
-        for i in range(3,-1,-1) :
-            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx)-i)/2) ) or txt.find(idx) >= 0) for idx in strTime ]
+
+        max_len_strTime = max([len(i) for i in strTime])
+        for i in range(max_len_strTime-1,-1,-1) :
+            check_cond = advance_search_str(i,txt)
             if (np.sum(check_cond) <= np.sum(temp) ) and np.sum(check_cond) > 0 :
                 temp = check_cond
         check_cond = temp
+
         if np.sum(check_cond) > 2 :
             continue
+
         if check_cond[0] :
                 _isEatBreakfast = True
         elif check_cond[1] :
@@ -198,6 +214,7 @@ def check_str(result,txts) :
         elif check_cond[4] :
                 isEatingBefore = True
         elif check_cond[5] :
+                isEatingBefore = False
                 isEatingBefore = False
 
 def main(argv) :
