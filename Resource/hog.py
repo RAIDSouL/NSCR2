@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from IPython.core.debugger import set_trace
+from sklearn.metrics import confusion_matrix
 # count = 0
 # charlist = "ABCDF"
 # colorlist = ["red","green","blue","olive","cyan"]
@@ -71,20 +72,21 @@ import numpy as np
 import cv2
 
 count = 0
-hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
+#(size image 50x50 ),(block size),(cell size = 1 cell = 1 block = all img),(number of bin)
+hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
 charlist = "TF"
-label_train = np.zeros((62,1))
+label_train = np.zeros((101,1))
 colorlist = ["red","green"]
-n_sets = [42,22]
+n_sets = [60,43]
 for char_id in range(0,2):
     for im_id in range(1,n_sets[char_id]):
         #5 pictures
 
         #read pictures
         image = cv2.imread("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png",0)
-        print("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png")
+        # print("../Checkdataset/"+ charlist[char_id] + "//" + str(im_id) + ".png")
         image = image[0:image.shape[0],0:image.shape[0]]
-        cv2.imshow("image" , image)
+        # cv2.imshow("image" , image)
         # cv2.waitKey(0)
         image = cv2.resize(image, (80, 80))
         image = cv2.medianBlur(image,9)
@@ -114,11 +116,14 @@ for char_id in range(0,2):
 knn = cv2.ml.KNearest_create()
 # set_trace()
 label_train = label_train.astype(int)
+# print(label_train.shape)
+# print(features_train.shape)
 knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 _,result,_,_ = knn.findNearest(features_train,3)
-print(result)
-
-np.save("features_train1" , features_train)
-np.save("label_train1" , label_train)
+# print(result)
+cm = confusion_matrix(label_train, result)
+print(cm)
+np.save("features_train4" , features_train)
+np.save("label_train4" , label_train)
 # print(features_train)
 # print(label_train)
