@@ -1,4 +1,4 @@
-v.3 
+﻿v.3 
 pic 
 	5.jpg
 	118.jpg eatingbf
@@ -9,3 +9,8 @@ version 4
 pic	5 eatbf
 	232 dinner eatbf
 	type 357 เน่าทุกอัน
+version 5
+pic	5 ก่อนอาหาร
+	232 หลังอาหาร แต่ดันไปถูกก่อนอาหารเฉย
+	326 เหมือนอันบน แถม dinner
+	354 same บน

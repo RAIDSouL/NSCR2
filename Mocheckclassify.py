@@ -278,7 +278,7 @@ def main(argv) :
                 Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
                 ho = hog.compute(Image_hog)
                 data_train_hog = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train_hog,2)
+                _,result,_,_ = knn.findNearest(data_train_hog,3)
                 # print(txts)
                 # print(result[0][0])
                 # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
@@ -288,10 +288,15 @@ def main(argv) :
 
     except :
         global isEatingBefore 
+        isEatingBefore = False
         global _isEatBreakfast
+        _isEatBreakfast = False
         global _isEatLunch 
-        global _isEatDinner 
+        _isEatLunch = False
+        global _isEatDinner
+        _isEatDinner = False 
         global _isEatBedTime
+        _isEatBedTime =False
     finally :
         cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
 
