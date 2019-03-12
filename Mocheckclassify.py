@@ -253,7 +253,7 @@ def main(argv) :
         ###imageProcessing###
         Image = cv2.imread(argv[0] , 0)
         Image = imutils.resize(Image , height=700)
-        Image = Image[math.floor(Image.shape[0]*0.4):math.floor(Image.shape[0]*0.9),:]
+        Image = Image[math.floor(Image.shape[0]*0.3):math.floor(Image.shape[0]*0.9),:]
         Image_contour = Image.copy()
         Image_hog = Image.copy()
         Image_padding = Image.copy()
@@ -325,7 +325,7 @@ def main(argv) :
                 Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
                 ho = hog.compute(Image_hog)
                 data_train_hog = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train_hog,2)
+                _,result,_,_ = knn.findNearest(data_train_hog,3)
                 # print(txts) 
                 # print(result[0][0])
                 # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
