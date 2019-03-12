@@ -152,22 +152,30 @@ def main(argv) :
                 check = (iterative_levenshtein(data,txt) <= math.floor((len(data)-1)/2) or txt.find(data) >= 0)
                 if check and idx == 0 :
                     _isEatBreakfast = True
+                    break
                 if check and idx == 1 :
                     _isEatLunch = True
+                    break
                 if check and idx == 2 :
                     _isEatDinner = True
+                    break
                 if check and idx == 3 :
                     _isEatBedTime = True
+                    break
                 if check and idx == 4 :
                     isEatingBefore = True
+                    break
                 if check and idx == 5 :
                     isEatingBefore = False
+                    break
                 if check and idx == 6 :
                     isEatingBefore = False
                     _isEatBreakfast = True
+                    break
                 if check and idx == 7 :
                     isEatingBefore = False
                     _isEatBreakfast = True
+                    break
     except :
         isEatingBefore = False
         _isEatBreakfast = False
