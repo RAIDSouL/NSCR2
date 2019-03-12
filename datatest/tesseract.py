@@ -97,5 +97,5 @@ def text_from_image_file(image_name,lang):
            ouput = ouput + [''.join(list_with_char_removed)]
     return ouput
 
-txts = text_from_image_file("2210.png" ,'tha')
+txts = text_from_image_file("446.png" ,'tha')
 print(txts)

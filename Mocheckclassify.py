@@ -21,7 +21,9 @@ _isEatBedTime =False
 def deepCheck(raw_image,hog,knn):
     # cv2.imshow("asd",raw_image)
     # cv2.waitKey(0)
-
+    # sad = raw_image.copy()
+    # cv2.imshow("sda",sad)
+    # cv2.waitKey(0)
     blurred = cv2.GaussianBlur(raw_image, (3 , 3), 0)
     edged = cv2.Canny(blurred, 50, 200, 255)
     kernel = np.ones((2,6),np.uint8)
@@ -35,11 +37,13 @@ def deepCheck(raw_image,hog,knn):
     
     for cnt_2 in contours_2[0:int(len(contours_2))] :
         x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
-        # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
+        # cv2.rectangle(sad , (x2,y2) , (x2+w2,y2+h2) , (0,0,255) , 2)
+        # cv2.imshow("sad",sad)
+        # cv2.waitKey(0)
         img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
         img_mini_con = img_mini_con[0:img_mini_con.shape[0],0:img_mini_con.shape[0]]
         img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
-        # cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
+        cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
         # cv2.imshow("asd",img_for_ocr_text)
         # cv2.imshow("con",img_mini_con)
         # cv2.waitKey(0)
@@ -51,7 +55,7 @@ def deepCheck(raw_image,hog,knn):
         # cv2.waitKey(0)
         ho = hog.compute(img_mini_con)
         data_train2 = ho.reshape(1,-1)
-        _,result2,_,_ = knn.findNearest(data_train2,3)
+        _,result2,_,_ = knn.findNearest(data_train2,2)
 
         
 
@@ -60,7 +64,6 @@ def deepCheck(raw_image,hog,knn):
         if result2[0][0] == 0 :
             if( h2 / w2 > 0.52) :
                 roi = img_for_ocr_text[0:h2, int((h2)*0.7):w2]
-                # if roi.shape[0] > 0 and roi.shape[1] > 0 :
                 # cv2.imshow("sdss" , roi)
                 # cv2.waitKey(0)
             else :
@@ -69,8 +72,9 @@ def deepCheck(raw_image,hog,knn):
                 # cv2.waitKey(0)
             rand_name_file = np.random.randint(1000 , size = 1)
             cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
+            # set_trace()
             txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
-            # print(txts2)
+            print(txts2)
             os.remove(str(rand_name_file[0]) + ".png")
             check_str(result2[0][0],txts2)
 
@@ -148,7 +152,7 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
 
 def text_from_image_file(image_name,lang):
     output_name = "OutputImg"
-    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1','--psm','7'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return_code = subprocess.call(['tesseract',image_name,output_name,'-l',lang,'-c','preserve_interword_spaces=1','--psm','6'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = open(output_name+'.txt','r',encoding='utf-8')
     str_read = d.read()
     # char_to_remove = temp.split()
@@ -279,9 +283,9 @@ def main(argv) :
         datalists = []
 
         ###HOG###
-        hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
-        features_train = np.load("./version1/features_Sqr.npy")
-        label_train = np.load("./version1/label_Sqr.npy")
+        hog = cv2.HOGDescriptor((80, 80),(32, 32),(16, 16),(16, 16),40)
+        features_train = np.load("./version1/features_Sqr_cir.npy")
+        label_train = np.load("./version1/label_Sqr_cir.npy")
         knn = cv2.ml.KNearest_create()
         knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
     
@@ -291,8 +295,8 @@ def main(argv) :
             x, y, w, h = cv2.boundingRect(cnt)
             ################ rectangle if want  #######################
             # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-            # imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
-            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
+            imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
+            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
             if w  > 235 :
                 Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
                 # cv2.imshow("sad",Image_mini_con)
@@ -307,7 +311,7 @@ def main(argv) :
                 if w < 2 or h < 2 :
                     continue
                 ########## STR ############
-                # cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
+                cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
                 Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
                 cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
                 txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
@@ -325,9 +329,9 @@ def main(argv) :
                 Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
                 ho = hog.compute(Image_hog)
                 data_train_hog = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train_hog,3)
-                # print(txts) 
-                # print(result[0][0])
+                _,result,_,_ = knn.findNearest(data_train_hog,2)
+                print(txts) 
+                print(result[0][0])
                 # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
                 #     cv2.imshow("lunch",Image_hog)
                 #     cv2.waitKey(0)
