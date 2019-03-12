@@ -147,35 +147,62 @@ def main(argv) :
         _isEatBedTime =False
         print(datalists)
 
-        for idx,data in enumerate(strTime) :
-            for txt in datalists :
-                check = (iterative_levenshtein(data,txt) <= math.floor((len(data)-1)/2) or txt.find(data) >= 0)
-                if check and idx == 0 :
-                    _isEatBreakfast = True
-                    break
-                if check and idx == 1 :
-                    _isEatLunch = True
-                    break
-                if check and idx == 2 :
-                    _isEatDinner = True
-                    break
-                if check and idx == 3 :
-                    _isEatBedTime = True
-                    break
-                if check and idx == 4 :
-                    isEatingBefore = True
-                    break
-                if check and idx == 5 :
-                    isEatingBefore = False
-                    break
-                if check and idx == 6 :
-                    isEatingBefore = False
-                    _isEatBreakfast = True
-                    break
-                if check and idx == 7 :
-                    isEatingBefore = False
-                    _isEatBreakfast = True
-                    break
+        for txt in datalists :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx)) /2)) ) or txt.find(idx) >= 0) for idx in strTime[0:4] ]
+            if np.sum(check_cond) > 2 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime[0:4] ]
+            if np.sum(check_cond) > 2 :
+                continue
+            if check_cond[0]:
+                _isEatBreakfast = True
+                continue
+            if check_cond[1] :
+                _isEatLunch = True
+                continue
+            if check_cond[2] :
+                _isEatDinner = True
+                continue
+            if check_cond[3] :
+                _isEatBedTime = True
+                continue
+            # if check and idx == 4 :
+            #     isEatingBefore = True
+            #     break
+            # if check and idx == 5 :
+            #     set_trace()
+            #     isEatingBefore = False
+            #     break
+            # if check and idx == 6 :
+            #     set_trace()
+            #     isEatingBefore = False
+            #     _isEatBreakfast = True
+            #     break
+            # if check and idx == 7 :
+            #     isEatingBefore = False
+            #     _isEatBreakfast = True
+            #     break
+
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            if np.sum(check_cond) > 1 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 3) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            if np.sum(check_cond) > 1 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 5) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            # set_trace()
+            if check_cond[0] : 
+                isEatingBefore = True
+                continue
+            elif check_cond[1] :
+                isEatingBefore = False
+                continue
+            elif check_cond[2] :
+                isEatingBefore = False
+                _isEatBreakfast = True
+                continue
+            elif check_cond[3] :
+                isEatingBefore = False
+                _isEatBreakfast = True
+                continue
+                
     except :
         isEatingBefore = False
         _isEatBreakfast = False
