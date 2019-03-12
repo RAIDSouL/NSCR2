@@ -43,7 +43,7 @@ def deepCheck(raw_image,hog,knn):
         img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
         img_mini_con = img_mini_con[0:img_mini_con.shape[0],0:img_mini_con.shape[0]]
         img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
-        cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
+        # cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
         # cv2.imshow("asd",img_for_ocr_text)
         # cv2.imshow("con",img_mini_con)
         # cv2.waitKey(0)
@@ -55,8 +55,8 @@ def deepCheck(raw_image,hog,knn):
         # cv2.waitKey(0)
         ho = hog.compute(img_mini_con)
         data_train2 = ho.reshape(1,-1)
-        _,result2,_,_ = knn.findNearest(data_train2,2)
-
+        _,result2,_,_ = knn.findNearest(data_train2,3)
+        # print(result2)
         
 
         ### only str
@@ -284,8 +284,8 @@ def main(argv) :
 
         ###HOG###
         hog = cv2.HOGDescriptor((80, 80),(32, 32),(16, 16),(16, 16),40)
-        features_train = np.load("./version1/features_Sqr_cir.npy")
-        label_train = np.load("./version1/label_Sqr_cir.npy")
+        features_train = np.load("./version1/features_Sqr_cir_final.npy")
+        label_train = np.load("./version1/label_Sqr_cir_final.npy")
         knn = cv2.ml.KNearest_create()
         knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
     
@@ -295,8 +295,8 @@ def main(argv) :
             x, y, w, h = cv2.boundingRect(cnt)
             ################ rectangle if want  #######################
             # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-            imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
-            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
+            # imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
+            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
             if w  > 235 :
                 Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
                 # cv2.imshow("sad",Image_mini_con)
@@ -311,7 +311,7 @@ def main(argv) :
                 if w < 2 or h < 2 :
                     continue
                 ########## STR ############
-                cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
+                # cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
                 Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
                 cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
                 txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
@@ -329,9 +329,9 @@ def main(argv) :
                 Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
                 ho = hog.compute(Image_hog)
                 data_train_hog = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train_hog,2)
-                print(txts) 
-                print(result[0][0])
+                _,result,_,_ = knn.findNearest(data_train_hog,3)
+                # print(txts) 
+                # print(result[0][0])
                 # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
                 #     cv2.imshow("lunch",Image_hog)
                 #     cv2.waitKey(0)
