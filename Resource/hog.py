@@ -75,9 +75,9 @@ count = 0
 #(size image 50x50 ),(block size),(cell size = 1 cell = 1 block = all img),(number of bin)
 hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
 charlist = "TF"
-label_train = np.zeros((88,1))
+label_train = np.zeros((74,1))
 colorlist = ["red","green"]
-n_sets = [52,38]
+n_sets = [44,32]
 for char_id in range(0,2):
     for im_id in range(1,n_sets[char_id]):
         #5 pictures
@@ -89,8 +89,12 @@ for char_id in range(0,2):
         # cv2.imshow("image" , image)
         # cv2.waitKey(0)
         image = cv2.resize(image, (80, 80))
-        image = cv2.medianBlur(image,9)
+        # cv2.imwrite(charlist[char_id] + str(im_id) + ".png",image)
+        # image = cv2.medianBlur(image,9)
+        # image = cv2.GaussianBlur(image, (7 , 7), 0)
         image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        # image = cv2.medianBlur(image,7)
+        # image = cv2.GaussianBlur(image, (5 , 5), 0)
         # blurred = cv2.GaussianBlur(image, (7 , 7), 0)
         # edged = cv2.Canny(blurred, 50, 200, 255)
         # kernel = np.ones((3,3),np.uint8)
@@ -120,10 +124,10 @@ label_train = label_train.astype(int)
 # print(features_train.shape)
 knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
 _,result,_,_ = knn.findNearest(features_train,3)
-print(result)
+# print(result)
 cm = confusion_matrix(label_train, result)
 print(cm)
-np.save("features_train5" , features_train)
-np.save("label_train5" , label_train)
+np.save("features_Sqr" , features_train)
+np.save("label_Sqr" , label_train)
 # print(features_train)
 # print(label_train)

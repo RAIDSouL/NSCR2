@@ -37,19 +37,21 @@ def deepCheck(raw_image,hog,knn):
         x2, y2, w2, h2 = cv2.boundingRect(cnt_2)
         # cv2.rectangle(Image_padding , (x-10,y-18) , (x+w+13,y+h+4) , (0,0,255) , 2)
         img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
-        # cv2.imwrite( str(int(w2*h2)) + ".png" , img_mini_con)
+        img_mini_con = img_mini_con[0:img_mini_con.shape[0],0:img_mini_con.shape[0]]
         img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
-    
+        # cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
         # cv2.imshow("asd",img_for_ocr_text)
+        # cv2.imshow("con",img_mini_con)
+        # cv2.waitKey(0)
      
         img_mini_con = cv2.resize(img_mini_con, (80,80))
-        img_mini_con = cv2.medianBlur(img_mini_con,9)
+        # img_mini_con = cv2.medianBlur(img_mini_con,9)
         img_mini_con = cv2.adaptiveThreshold(img_mini_con,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
         # cv2.imshow("sdsd" , img_mini_con)
         # cv2.waitKey(0)
         ho = hog.compute(img_mini_con)
         data_train2 = ho.reshape(1,-1)
-        _,result2,_,_ = knn.findNearest(data_train2,2)
+        _,result2,_,_ = knn.findNearest(data_train2,3)
 
         
 
@@ -190,16 +192,36 @@ def check_str(result,txts) :
 
     for txt in txts :
 
-        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx))) ) or txt.find(idx) >= 0) for idx in strTime ]
-        temp = check_cond.copy()
+        # check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor((len(idx))) ) or txt.find(idx) >= 0) for idx in strTime ]
+        # temp = check_cond.copy()
 
-        max_len_strTime = max([len(i) for i in strTime])
-        for i in range(max_len_strTime-1,-1,-1) :
-            check_cond = advance_search_str(i,txt)
-            if (np.sum(check_cond) <= np.sum(temp) ) and np.sum(check_cond) > 0 :
-                temp = check_cond
-        check_cond = temp
+        # max_len_strTime = max([len(i) for i in strTime])
+        # for i in range(max_len_strTime-1,-1,-1) :
+        #     check_cond = advance_search_str(i,txt)
+        #     if (np.sum(check_cond) <= np.sum(temp) ) and np.sum(check_cond) > 0 :
+        #         temp = check_cond
+        # check_cond = temp
 
+        # if np.sum(check_cond) > 2 :
+        #     continue
+
+        # if check_cond[0] :
+        #         _isEatBreakfast = True
+        # elif check_cond[1] :
+        #         _isEatLunch = True
+        # elif check_cond[2] :
+        #         _isEatDinner = True
+        # elif check_cond[3] :
+        #         _isEatBedTime = True
+        # elif check_cond[4] :
+        #         isEatingBefore = True
+        # elif check_cond[5] :
+        #         isEatingBefore = False
+        #         isEatingBefore = False
+        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx)) /2)) ) or txt.find(idx) >= 0) for idx in strTime ]
+        if np.sum(check_cond) > 2 :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime ]
+        
         if np.sum(check_cond) > 2 :
             continue
 
@@ -208,13 +230,22 @@ def check_str(result,txts) :
         elif check_cond[1] :
                 _isEatLunch = True
         elif check_cond[2] :
+                # set_trace()
                 _isEatDinner = True
         elif check_cond[3] :
                 _isEatBedTime = True
-        elif check_cond[4] :
+        
+        check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-2:] ]
+        if np.sum(check_cond) > 1 :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 3) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-2:] ]
+        if np.sum(check_cond) > 1 :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 5) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-2:] ]
+
+
+        if check_cond[0] :
                 isEatingBefore = True
-        elif check_cond[5] :
-                isEatingBefore = False
+                
+        elif check_cond[1] :
                 isEatingBefore = False
 
 def main(argv) :
@@ -222,6 +253,7 @@ def main(argv) :
         ###imageProcessing###
         Image = cv2.imread(argv[0] , 0)
         Image = imutils.resize(Image , height=700)
+        Image = Image[math.floor(Image.shape[0]*0.4):math.floor(Image.shape[0]*0.9),:]
         Image_contour = Image.copy()
         Image_hog = Image.copy()
         Image_padding = Image.copy()
@@ -244,15 +276,12 @@ def main(argv) :
 
         Image_padding = cv2.copyMakeBorder(Image_padding, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
 
-        #???#
-        fname = argv[0].split(".")[0]
-
         datalists = []
 
         ###HOG###
         hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
-        features_train = np.load("./version1/features_train5.npy")
-        label_train = np.load("./version1/label_train5.npy")
+        features_train = np.load("./version1/features_Sqr.npy")
+        label_train = np.load("./version1/label_Sqr.npy")
         knn = cv2.ml.KNearest_create()
         knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
     
@@ -262,7 +291,7 @@ def main(argv) :
             x, y, w, h = cv2.boundingRect(cnt)
             ################ rectangle if want  #######################
             # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-            # imgsss = Image_padding[y-16:y+h+4 , x-10:x+w+13]
+            # imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
             # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
             if w  > 235 :
                 Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
@@ -278,6 +307,7 @@ def main(argv) :
                 if w < 2 or h < 2 :
                     continue
                 ########## STR ############
+                # cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
                 Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
                 cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
                 txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')
@@ -291,19 +321,20 @@ def main(argv) :
                 # except :
                 #     print("Error >> ",x,y,w,h)
                 Image_hog = cv2.resize(Image_hog, (80, 80))
-                Image_hog = cv2.medianBlur(Image_hog,9)
+                # Image_hog = cv2.medianBlur(Image_hog,9)
                 Image_hog = cv2.adaptiveThreshold(Image_hog,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
                 ho = hog.compute(Image_hog)
                 data_train_hog = ho.reshape(1,-1)
-                _,result,_,_ = knn.findNearest(data_train_hog,3)
-                # print(txts)
+                _,result,_,_ = knn.findNearest(data_train_hog,2)
+                # print(txts) 
                 # print(result[0][0])
                 # if txts == ["ก่อนนอน"] or txts == ["กลางวัน"] :
                 #     cv2.imshow("lunch",Image_hog)
                 #     cv2.waitKey(0)
                 check_str(result[0][0],txts)
 
-    except :
+    except Exception as e:
+        # print(e)
         global isEatingBefore 
         isEatingBefore = False
         global _isEatBreakfast
