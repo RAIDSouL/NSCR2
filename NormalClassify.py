@@ -145,7 +145,7 @@ def main(argv) :
         _isEatLunch = False
         _isEatDinner = False
         _isEatBedTime =False
-        print(datalists)
+        # print(datalists)
 
         for txt in datalists :
             check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx)) /2)) ) or txt.find(idx) >= 0) for idx in strTime[0:4] ]
