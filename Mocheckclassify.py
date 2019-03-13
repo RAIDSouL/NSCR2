@@ -43,7 +43,7 @@ def deepCheck(raw_image,hog,knn):
         img_mini_con = raw_image[y2:y2+h2,x2:x2+h2+4]
         img_mini_con = img_mini_con[0:img_mini_con.shape[0],0:img_mini_con.shape[0]]
         img_for_ocr_text = raw_image[y2:y2+h2,x2:x2+w2]
-        # cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
+        cv2.imwrite( str(int(w2*h2)) + ".png" , img_for_ocr_text)
         # cv2.imshow("asd",img_for_ocr_text)
         # cv2.imshow("con",img_mini_con)
         # cv2.waitKey(0)
@@ -74,7 +74,7 @@ def deepCheck(raw_image,hog,knn):
             cv2.imwrite( str(rand_name_file[0]) + ".png" , roi)
             # set_trace()
             txts2 = text_from_image_file( str(rand_name_file[0]) + ".png" ,'tha')
-            print(txts2)
+            # print(txts2)
             os.remove(str(rand_name_file[0]) + ".png")
             check_str(result2[0][0],txts2)
 
@@ -295,8 +295,8 @@ def main(argv) :
             x, y, w, h = cv2.boundingRect(cnt)
             ################ rectangle if want  #######################
             # cv2.rectangle(Image_padding , (x+h,y-9) , (x+w+13,y+h+4) , (0,0,255) , 2)
-            # imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
-            # cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
+            imgsss = Image_padding[y-18:y+h+4 , x-10:x+w+13]
+            cv2.imwrite( str(w) + "+" +  str(h) + ".png" , imgsss)
             if w  > 235 :
                 Image_mini_con = Image_padding[y-18:y+h+4, x-10:x+w+13]
                 # cv2.imshow("sad",Image_mini_con)
@@ -311,7 +311,7 @@ def main(argv) :
                 if w < 2 or h < 2 :
                     continue
                 ########## STR ############
-                # cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
+                cv2.imwrite( str(w) + "-" +  str(h) + ".png" , Image_padding[y-18:y+h+4 , x-10:x+w+13])
                 Image_padding_str = Image_padding[y-9:y+h+4 , x+h:x+w+13]
                 cv2.imwrite( str(w) + "+" +  str(h) + ".png" , Image_padding_str)
                 txts = text_from_image_file( str(w) + "+" +  str(h) + ".png" ,'tha')

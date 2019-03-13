@@ -75,9 +75,9 @@ count = 0
 #(size image 50x50 ),(block size),(cell size = 1 cell = 1 block = all img),(number of bin)
 hog = cv2.HOGDescriptor((80, 80),(32, 32),(16, 16),(16, 16),40)
 charlist = "TF"
-label_train = np.zeros((154,1))
+label_train = np.zeros((160,1))
 colorlist = ["red","green"]
-n_sets = [80,76]
+n_sets = [83,79]
 for char_id in range(0,2):
     for im_id in range(1,n_sets[char_id]):
         #5 pictures
@@ -123,7 +123,7 @@ label_train = label_train.astype(int)
 # print(label_train.shape)
 # print(features_train.shape)
 knn.train(features_train,cv2.ml.ROW_SAMPLE,label_train)
-_,result,_,_ = knn.findNearest(features_train,4)
+_,result,_,_ = knn.findNearest(features_train,3)
 # print(result)
 cm = confusion_matrix(label_train, result)
 print(cm)
