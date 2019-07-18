@@ -9,10 +9,11 @@ import numpy as np
 import subprocess
 from imutils import contours
 from imutils.perspective import four_point_transform
+from IPython.core.debugger import set_trace
 
 
  
-strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร","หลังอาหารเช้าทันที","หลังอาหารเช้า"]
+strTime = ["เช้า","กลางวัน","เย็น","ก่อนนอน","ก่อนอาหาร","หลังอาหาร","หลังอาหารเช้าทันที","หลังอาหารเช้า","ก่อนอาหารเช้า"]
 
 datalists = []
 
@@ -110,63 +111,106 @@ def cvt_to_JSON(_isPeriod, _isEatBefore,_isEatBreakfast, _isEatLunch, _isEatDinn
     print(conv_json)
 
 def main(argv) :
-    image = cv2.imread(argv[0] ,0) 
-    image = imutils.resize(image, height=700)
-    Rem = image.copy()
-    Rim = image.copy()
-    image = cv2.medianBlur(image,9)
-    image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
-    blurred = cv2.GaussianBlur(image, (5 , 5), 0)
-    edged = cv2.Canny(blurred, 50, 200, 255)
-    kernel = np.ones((3,30),np.uint8)
-    dilation = cv2.dilate(edged,kernel,iterations = 1)
-    cv2.imshow("da" , dilation)
-    # cv2.waitKey(0)
-    contourmask,contours,hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    fname = argv[0].split(".")[0]
-    datalists = []
-    for cnt in contours[1:] :
-        x, y, w, h = cv2.boundingRect(cnt)
-        cv2.rectangle(Rim , (x,y) , (x+w,y+h) , (0,0,255) , 2)
-        if (h / w < 0.7 and h * w > 500 ) :
-            roi = Rem[y:y+h, x:x+w]
-            # roi = imutils.resize(roi, height=300)
-            cv2.imwrite( str(w*h) + ".png" , roi)
-            datalists = datalists + text_from_image_file( str(w*h) + ".png",'tha')
-            os.remove( str(w*h) + ".png")
+    try :
+        image = cv2.imread(argv[0] ,0) 
+        image = imutils.resize(image, height=700)
+        Rem = image.copy()
+        Rim = image.copy()
+        image = cv2.medianBlur(image,5)
+        image = cv2.adaptiveThreshold(image,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,5,2)
+        blurred = cv2.GaussianBlur(image, (5 , 5), 0)
+        edged = cv2.Canny(blurred, 50, 200, 255)
+        kernel = np.ones((3,30),np.uint8)
+        dilation = cv2.dilate(edged,kernel,iterations = 1)
+        # cv2.imshow("da" , dilation)
+        # cv2.waitKey(0)
+        contourmask,contours,hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        fname = argv[0].split(".")[0]
+        datalists = []
+        for cnt in contours[1:] :
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(Rim , (x,y) , (x+w,y+h) , (0,0,255) , 2)
+            if (h / w < 0.7 and h * w > 500 ) :
+                roi = Rem[y:y+h, x:x+w]
+                # roi = imutils.resize(roi, height=300)
+                cv2.imwrite( str(w*h) + ".png" , roi)
+                datalists = datalists + text_from_image_file( str(w*h) + ".png",'tha')
+                os.remove( str(w*h) + ".png")
 
-    cv2.imshow("image", Rim)
-    cv2.waitKey(0)
-    isEatingBefore = False
-    _isEatBreakfast = False
-    _isEatLunch = False
-    _isEatDinner = False
-    _isEatBedTime =False
-    print(datalists)
-    for idx,data in enumerate(strTime) :
+        # cv2.imshow("image", Rim)
+        # cv2.waitKey(0)
+        isEatingBefore = False
+        _isEatBreakfast = False
+        _isEatLunch = False
+        _isEatDinner = False
+        _isEatBedTime =False
+        # print(datalists)
+
         for txt in datalists :
-            check = (iterative_levenshtein(data,txt) <= math.floor((len(data)-1)/2) or txt.find(data) >= 0)
-            if check and idx == 0 :
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx)) /2)) ) or txt.find(idx) >= 0) for idx in strTime[0:4] ]
+            if np.sum(check_cond) > 2 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime[0:4] ]
+            if np.sum(check_cond) > 2 :
+                continue
+            if check_cond[0]:
                 _isEatBreakfast = True
-            if check and idx == 1 :
+                continue
+            if check_cond[1] :
                 _isEatLunch = True
-            if check and idx == 2 :
+                continue
+            if check_cond[2] :
                 _isEatDinner = True
-            if check and idx == 3 :
+                continue
+            if check_cond[3] :
                 _isEatBedTime = True
-            if check and idx == 4 :
-                isEatingBefore = True
-            if check and idx == 5 :
-                isEatingBefore = False
-            if check and idx == 6 :
-                isEatingBefore = False
-                _isEatBreakfast = True
-            if check and idx == 7 :
-                isEatingBefore = False
-                _isEatBreakfast = True
+                continue
+            # if check and idx == 4 :
+            #     isEatingBefore = True
+            #     break
+            # if check and idx == 5 :
+            #     set_trace()
+            #     isEatingBefore = False
+            #     break
+            # if check and idx == 6 :
+            #     set_trace()
+            #     isEatingBefore = False
+            #     _isEatBreakfast = True
+            #     break
+            # if check and idx == 7 :
+            #     isEatingBefore = False
+            #     _isEatBreakfast = True
+            #     break
 
-    cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
+            check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) -1) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            if np.sum(check_cond) > 1 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 3) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            if np.sum(check_cond) > 1 :
+                check_cond = [ ((iterative_levenshtein(idx,txt) <= math.floor(((len(idx) - 5) /2)) ) or txt.find(idx) >= 0) for idx in strTime[-5:] ]
+            # set_trace()
+            if check_cond[0] : 
+                isEatingBefore = True
+                continue
+            elif check_cond[1] :
+                isEatingBefore = False
+                continue
+            elif check_cond[2] :
+                isEatingBefore = False
+                _isEatBreakfast = True
+                continue
+            elif check_cond[3] :
+                isEatingBefore = False
+                _isEatBreakfast = True
+                continue
+                
+    except :
+        isEatingBefore = False
+        _isEatBreakfast = False
+        _isEatLunch = False
+        _isEatDinner = False
+        _isEatBedTime =False
+    finally :
+        cvt_to_JSON(False, isEatingBefore,_isEatBreakfast, _isEatLunch, _isEatDinner, _isEatBedTime, False, "_periodHour")
     # os.remove("OutputImg.txt")
     # os.remove("temp.txt")
 

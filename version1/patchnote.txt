@@ -1,0 +1,9 @@
+version 0 = 40,3
+version 1 = 40,3
+hog = cv2.HOGDescriptor((80, 80),(80, 80),(80, 80),(80, 80),40)
+version 2 = 11,2
+version 3 = 9,2
+version 4 = 40,3
+hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
+version 5 = 40,2
+hog = cv2.HOGDescriptor((80, 80),(16, 16),(8, 8),(8, 8),40)
